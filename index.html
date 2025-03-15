@@ -7,7 +7,6 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <style>
-        /* Assure-toi que la carte prend toute la hauteur de l'écran */
         body, html {
             height: 100%;
             margin: 0;
@@ -23,43 +22,50 @@
     <div id="map"></div>
 
     <script>
+        // Remplace cette URL par ton propre fichier CSV Google Sheets
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/1XeNSL5uGvEs2YffUxcDWHfenT37o2l4nxruZBqnaiMU/pub?gid=405970086&output=csv';
 
-        // Créer la carte et définir son centre et son niveau de zoom
-        const map = L.map('map').setView([48.8566, 2.3522], 6); // Centré sur la France
+        // Créer la carte avec un centre par défaut (France)
+        const map = L.map('map').setView([48.8566, 2.3522], 6);
 
-        // Utilisation d'un service de tuiles alternatif (CartoDB Positron)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CartoDB</a>'
+        // Utilisation de tuiles OpenStreetMap pour plus de simplicité
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Fonction pour charger et afficher les marqueurs
+        // Fonction pour charger les marqueurs depuis le CSV
         async function loadMarkers() {
-            const response = await fetch(sheetURL);
-            const csvText = await response.text();
-            const rows = csvText.split('\n').slice(1); // Sauter la première ligne (entêtes)
+            try {
+                const response = await fetch(sheetURL);
+                const csvText = await response.text();
+                const rows = csvText.split('\n').slice(1); // Sauter la première ligne (en-têtes)
 
-            rows.forEach(row => {
-                const cols = row.split(',');
-                if (cols.length >= 3) {
-                    const name = cols[0].trim(); // Nom du point
-                    const lat = parseFloat(cols[1]); // Latitude
-                    const lng = parseFloat(cols[2]); // Longitude
+                rows.forEach(row => {
+                    const cols = row.split(',');
+                    if (cols.length >= 3) {
+                        const name = cols[0].trim(); // Nom du point
+                        const lat = parseFloat(cols[1]); // Latitude
+                        const lng = parseFloat(cols[2]); // Longitude
 
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        // Ajouter un marqueur pour chaque point avec un pop-up
-                        L.marker([lat, lng]).addTo(map)
-                            .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
+                        // Vérifier que les coordonnées sont valides
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            // Ajouter un marqueur sur la carte
+                            L.marker([lat, lng]).addTo(map)
+                                .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
+                        }
                     }
-                }
-            });
+                });
+            } catch (error) {
+                console.error('Erreur lors du chargement des données CSV :', error);
+                alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
+            }
         }
 
-        // Appeler la fonction pour charger les marqueurs
-        loadMarkers();
+        loadMarkers(); // Charger les marqueurs sur la carte
 
-        // Ajouter des contrôles de zoom à la carte (par défaut, ils sont ajoutés automatiquement par Leaflet)
+        // Ajouter un contrôle de zoom (si nécessaire)
         L.control.zoom().addTo(map);
     </script>
 </body>
 </html>
+
