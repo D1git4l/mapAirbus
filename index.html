@@ -44,7 +44,8 @@
 
                 let markersLoaded = 0;
 
-                rows.forEach(row => {
+                // Parcourir uniquement les lignes de A230 à A239 (de index 229 à 238)
+                rows.slice(229, 239).forEach(row => {
                     const cols = row.split(','); // Diviser la ligne en colonnes
                     if (cols.length >= 3) {
                         const name = cols[0].trim(); // Nom du point (première colonne)
@@ -78,7 +79,6 @@
 
         loadMarkers(); // Charger les marqueurs sur la carte
 
-        // Ajouter un contrôle de zoom
     </script>
 </body>
 </html>
