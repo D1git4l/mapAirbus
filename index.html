@@ -45,28 +45,61 @@
                 rows.forEach(row => {
                     const cols = row.split(','); // Diviser la ligne en colonnes
                     if (cols.length >= 3) {
-                        const name = cols[0].trim(); // Nom du point (colonne A)
-                        const lat = parseFloat(cols[1].trim().replace(',', '.')); // Latitude (colonne B)
-                        const lng = parseFloat(cols[2].trim().replace(',', '.')); // Longitude (colonne C)
+                        const nameA = cols[0].trim(); // Nom du point (colonne A)
+                        const latA = parseFloat(cols[1].trim().replace(',', '.')); // Latitude (colonne B)
+                        const lngA = parseFloat(cols[2].trim().replace(',', '.')); // Longitude (colonne C)
+
+                        const nameE = cols[4].trim(); // Nom du bâtiment (colonne E)
+                        const latE = parseFloat(cols[5].trim().replace(',', '.')); // Latitude bâtiment (colonne F)
+                        const lngE = parseFloat(cols[6].trim().replace(',', '.')); // Longitude bâtiment (colonne G)
+
+                        const nameI = cols[9].trim(); // Nom de l'avion (colonne I)
+                        const latI = parseFloat(cols[10].trim().replace(',', '.')); // Latitude avion (colonne I)
+                        const lngI = parseFloat(cols[11].trim().replace(',', '.')); // Longitude avion (colonne J)
 
                         // Afficher les valeurs dans la console pour vérifier
-                        console.log(`Traitement du point : ${name}, Latitude: ${lat}, Longitude: ${lng}`);
+                        console.log(`Traitement du point : ${nameA}, Latitude: ${latA}, Longitude: ${lngA}`);
+                        console.log(`Traitement du bâtiment : ${nameE}, Latitude: ${latE}, Longitude: ${lngE}`);
+                        console.log(`Traitement de l'avion : ${nameI}, Latitude: ${latI}, Longitude: ${lngI}`);
 
-                        // Vérifier que les coordonnées sont valides
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            console.log(`Ajout du marqueur : ${name} (Lat: ${lat}, Lng: ${lng})`); // Debug
-                            // Ajouter le marqueur à la carte
-                            L.marker([lat, lng]).addTo(map)
-                                .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
+                        // Ajouter le marqueur simple pour les aéroports
+                        if (!isNaN(latA) && !isNaN(lngA)) {
+                            console.log(`Ajout du marqueur aéroport : ${nameA} (Lat: ${latA}, Lng: ${lngA})`);
+                            L.marker([latA, lngA]).addTo(map)
+                                .bindPopup(`<strong>${nameA}</strong><br>Lat: ${latA}, Lng: ${lngA}`);
                             markersLoaded++;
-                        } else {
-                            console.log(`Coordonnées invalides pour le point : ${name}`); // Debug
+                        }
+
+                        // Ajouter le marqueur bâtiment
+                        if (!isNaN(latE) && !isNaN(lngE)) {
+                            console.log(`Ajout du marqueur bâtiment : ${nameE} (Lat: ${latE}, Lng: ${lngE})`);
+                            L.marker([latE, lngE], {
+                                icon: L.icon({
+                                    iconUrl: 'https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/3416618.png', // URL brute pour l'icône du bâtiment
+                                    iconSize: [32, 32]
+                                })
+                            }).addTo(map)
+                            .bindPopup(`<strong>${nameE}</strong><br>Lat: ${latE}, Lng: ${lngE}`);
+                            markersLoaded++;
+                        }
+
+                        // Ajouter le marqueur avion
+                        if (!isNaN(latI) && !isNaN(lngI)) {
+                            console.log(`Ajout du marqueur avion : ${nameI} (Lat: ${latI}, Lng: ${lngI})`);
+                            L.marker([latI, lngI], {
+                                icon: L.icon({
+                                    iconUrl: 'https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/56426380-ic%C3%B4ne-de-l-avion-bleu-plan-isol%C3%A9-sur-fond-blanc.jpg', // URL brute pour l'icône avion
+                                    iconSize: [32, 32]
+                                })
+                            }).addTo(map)
+                            .bindPopup(`<strong>${nameI}</strong><br>Lat: ${latI}, Lng: ${lngI}`);
+                            markersLoaded++;
                         }
                     }
                 });
 
                 if (markersLoaded === 0) {
-                    console.log("Aucun marqueur ajouté. Vérifie les données CSV."); // Debug
+                    console.log("Aucun marqueur ajouté. Vérifie les données CSV.");
                 }
 
             } catch (error) {
