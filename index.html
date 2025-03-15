@@ -1,56 +1,85 @@
-async function loadMarkers() {
-    try {
-        const response = await fetch(sheetURL);
-        const csvText = await response.text();
-        const rows = csvText.split('\n').slice(1); // Ignore the header row
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte avec Marqueurs</title>
 
-        console.log('CSV chargé avec succès : ', csvText); // Affiche tout le CSV pour déboguer
+    <!-- Inclure la bibliothèque Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
-        let markersLoaded = 0;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script> <!-- Librairie PapaParse pour charger le CSV -->
+    
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
 
-        // Parcourir toutes les lignes du CSV
-        rows.forEach(row => {
-            const cols = row.split(','); // Diviser la ligne en colonnes
+    <h1>Carte des Aéroports</h1>
+    <div id="map"></div>
 
-            // Ignorer les lignes mal formatées (avec trop ou trop peu de colonnes)
-            if (cols.length !== 4) {
-                console.log(`Ligne ignorée : mauvaise structure - ${row}`);
-                return; // Ignorer cette ligne
-            }
+    <script>
+        // Initialisation de la carte
+        var map = L.map('map').setView([51.505, -0.09], 2); // Vue centrée par défaut (lat: 51.505, long: -0.09)
 
-            const name = cols[0].trim(); // Nom de l'élément (Aéroport, Bâtiment, Avion)
-            const lat = parseFloat(cols[1].trim().replace(',', '.')); // Latitude
-            const lng = parseFloat(cols[2].trim().replace(',', '.')); // Longitude
-            const imageUrl = cols[3].trim(); // URL de l'image
+        // Ajouter un fond de carte (tuiles OpenStreetMap)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
 
-            console.log(`Traitement ligne: ${cols}`);
-
-            // Ajouter le marqueur si les valeurs de latitude et longitude sont valides
-            if (!isNaN(lat) && !isNaN(lng)) {
-                // Créer l'icône à partir de l'URL de l'image
-                const icon = L.icon({
-                    iconUrl: imageUrl,
-                    iconSize: [32, 32], // Taille de l'icône
-                    iconAnchor: [16, 32], // Point d'ancrage de l'icône
-                    popupAnchor: [0, -32] // Point d'ancrage du popup
-                });
-
-                // Ajouter le marqueur à la carte
-                L.marker([lat, lng], { icon }).addTo(map)
-                    .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
-                markersLoaded++;
-            } else {
-                console.log(`Marqueur ignoré pour ${name}, Latitude: ${lat}, Longitude: ${lng}`);
-            }
-        });
-
-        // Afficher un message si aucun marqueur n'a été ajouté
-        if (markersLoaded === 0) {
-            console.log("Aucun marqueur ajouté. Vérifie les données CSV.");
+        // Fonction pour charger le CSV
+        function loadCSV(url) {
+            Papa.parse(url, {
+                download: true,
+                header: false,
+                skipEmptyLines: true,
+                dynamicTyping: true,
+                complete: function(results) {
+                    console.log("CSV chargé avec succès : ", results.data);
+                    loadMarkers(results.data); // Charge les marqueurs sur la carte
+                },
+                error: function(error) {
+                    console.error("Erreur lors du chargement des données CSV. Vérifie l'URL ou les données.", error);
+                }
+            });
         }
 
-    } catch (error) {
-        console.error('Erreur lors du chargement des données CSV :', error);
-        alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
-    }
-}
+        // Fonction pour ajouter les marqueurs sur la carte
+        function loadMarkers(data) {
+            data.forEach(function(row) {
+                // Vérifie si la ligne contient les 4 colonnes nécessaires (Nom, Latitude, Longitude, Image)
+                if (row.length === 4 && row[1] && row[2]) {
+                    var nom = row[0];
+                    var lat = row[1];
+                    var lon = row[2];
+                    var image = row[3];
+
+                    // Crée un marqueur pour chaque ligne du CSV
+                    var icon = L.icon({
+                        iconUrl: image, // URL de l'image
+                        iconSize: [32, 32], // Taille de l'icône
+                        iconAnchor: [16, 32], // Ancrage de l'icône
+                        popupAnchor: [0, -32] // Ancrage du popup
+                    });
+
+                    // Ajoute le marqueur à la carte avec un popup contenant le nom
+                    L.marker([lat, lon], { icon: icon })
+                        .addTo(map)
+                        .bindPopup("<b>" + nom + "</b>");
+                } else {
+                    console.log("Ligne ignorée : mauvaise structure - ", row);
+                }
+            });
+        }
+
+        // Charger le fichier CSV depuis l'URL
+        loadCSV('https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/airports.csv');
+    </script>
+
+</body>
+</html>
