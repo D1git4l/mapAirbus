@@ -1,96 +1,56 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte avec marqueurs</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <style>
-        #map {
-            width: 100%; /* Largeur de la carte */
-            height: 600px; /* Hauteur de la carte */
-        }
-    </style>
-</head>
-<body>
+async function loadMarkers() {
+    try {
+        const response = await fetch(sheetURL);
+        const csvText = await response.text();
+        const rows = csvText.split('\n').slice(1); // Ignore the header row
 
-    <h1>Carte avec marqueurs d'aéroports, bâtiments et avions</h1>
-    <div id="map"></div>
+        console.log('CSV chargé avec succès : ', csvText); // Affiche tout le CSV pour déboguer
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        // Initialisation de la carte
-        const map = L.map('map').setView([51.505, -0.09], 2); // Vue de départ (centrée au niveau mondial)
+        let markersLoaded = 0;
 
-        // Ajout de la couche de tuiles (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
+        // Parcourir toutes les lignes du CSV
+        rows.forEach(row => {
+            const cols = row.split(','); // Diviser la ligne en colonnes
 
-        // URL du fichier CSV
-        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
+            // Ignorer les lignes mal formatées (avec trop ou trop peu de colonnes)
+            if (cols.length !== 4) {
+                console.log(`Ligne ignorée : mauvaise structure - ${row}`);
+                return; // Ignorer cette ligne
+            }
 
-        // Fonction pour charger les marqueurs depuis le fichier CSV
-        async function loadMarkers() {
-            try {
-                const response = await fetch(sheetURL);
-                const csvText = await response.text();
-                const rows = csvText.split('\n').slice(1); // Sauter la première ligne (en-têtes)
+            const name = cols[0].trim(); // Nom de l'élément (Aéroport, Bâtiment, Avion)
+            const lat = parseFloat(cols[1].trim().replace(',', '.')); // Latitude
+            const lng = parseFloat(cols[2].trim().replace(',', '.')); // Longitude
+            const imageUrl = cols[3].trim(); // URL de l'image
 
-                console.log('CSV chargé avec succès : ', csvText); // Affiche tout le CSV pour déboguer
+            console.log(`Traitement ligne: ${cols}`);
 
-                let markersLoaded = 0;
-
-                // Parcourir toutes les lignes du CSV
-                rows.forEach(row => {
-                    const cols = row.split(','); // Diviser la ligne en colonnes
-
-                    // Vérifier que la ligne contient les 4 éléments nécessaires : Nom, Latitude, Longitude, Image
-                    if (cols.length >= 4) {
-                        const name = cols[0].trim(); // Nom de l'élément (Aéroport, Bâtiment, Avion)
-                        const lat = parseFloat(cols[1].trim().replace(',', '.')); // Latitude
-                        const lng = parseFloat(cols[2].trim().replace(',', '.')); // Longitude
-                        const imageUrl = cols[3].trim(); // URL de l'image
-
-                        // Affichage pour déboguer chaque ligne traitée
-                        console.log(`Traitement ligne: ${cols}`);
-
-                        // Ajouter le marqueur si les valeurs de latitude et longitude sont valides
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            // Créer l'icône à partir de l'URL de l'image
-                            const icon = L.icon({
-                                iconUrl: imageUrl,
-                                iconSize: [32, 32], // Taille de l'icône
-                                iconAnchor: [16, 32], // Point d'ancrage de l'icône
-                                popupAnchor: [0, -32] // Point d'ancrage du popup
-                            });
-
-                            // Ajouter le marqueur à la carte
-                            L.marker([lat, lng], { icon }).addTo(map)
-                                .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
-                            markersLoaded++;
-                        } else {
-                            console.log(`Marqueur ignoré pour ${name}, Latitude: ${lat}, Longitude: ${lng}`);
-                        }
-                    } else {
-                        console.log(`Ligne ignorée : nombre insuffisant de colonnes - ${row}`);
-                    }
+            // Ajouter le marqueur si les valeurs de latitude et longitude sont valides
+            if (!isNaN(lat) && !isNaN(lng)) {
+                // Créer l'icône à partir de l'URL de l'image
+                const icon = L.icon({
+                    iconUrl: imageUrl,
+                    iconSize: [32, 32], // Taille de l'icône
+                    iconAnchor: [16, 32], // Point d'ancrage de l'icône
+                    popupAnchor: [0, -32] // Point d'ancrage du popup
                 });
 
-                // Afficher un message si aucun marqueur n'a été ajouté
-                if (markersLoaded === 0) {
-                    console.log("Aucun marqueur ajouté. Vérifie les données CSV.");
-                }
-
-            } catch (error) {
-                console.error('Erreur lors du chargement des données CSV :', error);
-                alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
+                // Ajouter le marqueur à la carte
+                L.marker([lat, lng], { icon }).addTo(map)
+                    .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
+                markersLoaded++;
+            } else {
+                console.log(`Marqueur ignoré pour ${name}, Latitude: ${lat}, Longitude: ${lng}`);
             }
+        });
+
+        // Afficher un message si aucun marqueur n'a été ajouté
+        if (markersLoaded === 0) {
+            console.log("Aucun marqueur ajouté. Vérifie les données CSV.");
         }
 
-        // Appel de la fonction pour charger les marqueurs
-        loadMarkers();
-    </script>
-
-</body>
-</html>
+    } catch (error) {
+        console.error('Erreur lors du chargement des données CSV :', error);
+        alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
+    }
+}
