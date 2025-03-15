@@ -19,69 +19,69 @@
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        // Initialisation de la carte
-        const map = L.map('map').setView([51.505, -0.09], 2); // Vue de départ (centrée au niveau mondial)
+        // Initialisation de la carte centrée sur le monde
+        const map = L.map('map').setView([20, 0], 2); // Coordonnées centrales du monde
 
-        // Ajout de la couche de tuiles (OpenStreetMap)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        // Ajout de la couche de tuiles en français
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributeurs'
         }).addTo(map);
 
         // URL du fichier CSV
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
 
         // Fonction pour charger les marqueurs depuis le fichier CSV
-        async function loadMarkers() {
+        async function chargerMarqueurs() {
             try {
-                const response = await fetch(sheetURL);
-                const csvText = await response.text();
-                const rows = csvText.split('\n').slice(1); // Sauter la première ligne (en-têtes)
+                const reponse = await fetch(sheetURL);
+                const texteCSV = await reponse.text();
+                const lignes = texteCSV.split('\n').slice(1); // Ignorer la première ligne (en-têtes)
 
-                console.log('CSV chargé avec succès : ', csvText);
+                console.log('CSV chargé avec succès : ', texteCSV);
 
-                let markersLoaded = 0;
+                let marqueursAjoutes = 0;
 
                 // Parcourir toutes les lignes du CSV
-                rows.forEach(row => {
-                    const cols = row.split(','); // Diviser la ligne en colonnes
-                    if (cols.length >= 4) {
-                        const name = cols[0].trim(); // Nom du point (colonne A)
-                        const lat = parseFloat(cols[1].trim().replace(',', '.')); // Latitude (colonne B)
-                        const lng = parseFloat(cols[2].trim().replace(',', '.')); // Longitude (colonne C)
-                        const iconUrl = cols[3].trim(); // URL de l'icône (colonne D)
+                lignes.forEach(ligne => {
+                    const colonnes = ligne.split(','); // Diviser la ligne en colonnes
+                    if (colonnes.length >= 4) {
+                        const nom = colonnes[0].trim(); // Nom du point (colonne A)
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.')); // Latitude (colonne B)
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.')); // Longitude (colonne C)
+                        const iconeUrl = colonnes[3].trim(); // URL de l'icône (colonne D)
 
                         // Vérifier que les coordonnées sont valides
                         if (!isNaN(lat) && !isNaN(lng)) {
                             // Définir une icône personnalisée
-                            const customIcon = L.icon({
-                                iconUrl: iconUrl,
+                            const iconePersonnalisee = L.icon({
+                                iconUrl: iconeUrl,
                                 iconSize: [32, 32], // Taille de l'icône
                                 iconAnchor: [16, 32], // Point d'ancrage de l'icône
                                 popupAnchor: [0, -32] // Position du popup
                             });
 
                             // Ajouter le marqueur à la carte avec l'icône personnalisée
-                            L.marker([lat, lng], { icon: customIcon }).addTo(map)
-                                .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
-                            markersLoaded++;
+                            L.marker([lat, lng], { icon: iconePersonnalisee }).addTo(map)
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                            marqueursAjoutes++;
                         } else {
-                            console.log(`Coordonnées invalides pour le point : ${name}`);
+                            console.log(`Coordonnées invalides pour le point : ${nom}`);
                         }
                     }
                 });
 
-                if (markersLoaded === 0) {
+                if (marqueursAjoutes === 0) {
                     console.log("Aucun marqueur ajouté. Vérifie les données CSV.");
                 }
 
-            } catch (error) {
-                console.error('Erreur lors du chargement des données CSV :', error);
+            } catch (erreur) {
+                console.error('Erreur lors du chargement des données CSV :', erreur);
                 alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
             }
         }
 
         // Appel de la fonction pour charger les marqueurs
-        loadMarkers();
+        chargerMarqueurs();
     </script>
 
 </body>
