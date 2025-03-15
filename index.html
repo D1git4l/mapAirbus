@@ -44,7 +44,7 @@
                 // Parcourir toutes les lignes du CSV
                 rows.forEach(row => {
                     const cols = row.split(','); // Diviser la ligne en colonnes
-                    if (cols.length >= 3) {
+                    if (cols.length >= 12) {  // Vérifie que la ligne contient suffisamment de colonnes
                         const nameA = cols[0].trim(); // Nom du point (colonne A)
                         const latA = parseFloat(cols[1].trim().replace(',', '.')); // Latitude (colonne B)
                         const lngA = parseFloat(cols[2].trim().replace(',', '.')); // Longitude (colonne C)
