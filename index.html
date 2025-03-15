@@ -33,58 +33,51 @@
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Fonction pour charger les marqueurs depuis le fichier CSV
-        async function loadMarkers() {
-            try {
-                const response = await fetch(sheetURL);
-                const csvText = await response.text();
-                const rows = csvText.split('\n').slice(1); // Sauter la première ligne (en-têtes)
+// Fonction pour charger les marqueurs depuis le fichier CSV
+async function loadMarkers() {
+    try {
+        const response = await fetch(sheetURL);
+        const csvText = await response.text();
+        const rows = csvText.split('\n').slice(1); // Sauter la première ligne (en-têtes)
 
-                console.log('CSV chargé avec succès : ', csvText); // Affiche tout le CSV pour déboguer
+        console.log('CSV chargé avec succès : ', csvText); // Affiche tout le CSV pour déboguer
 
-                let markersLoaded = 0;
+        let markersLoaded = 0;
 
-                // Parcourir chaque ligne du CSV
-                rows.forEach(row => {
-                    const cols = row.split(','); // Diviser la ligne en colonnes
-                    if (cols.length >= 3) {
-                        const name = cols[0].trim(); // Nom du point (colonne A)
+        // Parcourir toutes les lignes
+        rows.forEach(row => {
+            const cols = row.split(','); // Diviser la ligne en colonnes
+            if (cols.length >= 3) {
+                const name = cols[0].trim(); // Nom du point (colonne A)
+                // Remplacer les virgules par des points pour les coordonnées
+                const lat = parseFloat(cols[2].trim().replace(',', '.')); // Latitude (colonne C)
+                const lng = parseFloat(cols[1].trim().replace(',', '.')); // Longitude (colonne B)
 
-                        // Remplacer les virgules par des points pour les coordonnées
-                        let lng = cols[1].trim().replace(',', '.'); // Longitude (colonne B)
-                        let lat = cols[2].trim().replace(',', '.'); // Latitude (colonne C)
+                // Afficher les valeurs dans la console pour vérifier
+                console.log(`Traitement du point : ${name}, Latitude: ${lat}, Longitude: ${lng}`);
 
-                        // Vérifier les valeurs avant la conversion en float
-                        console.log(`Traitement du point : ${name}, Latitude: ${lat}, Longitude: ${lng}`);
-
-                        // Convertir en nombre
-                        lng = parseFloat(lng);
-                        lat = parseFloat(lat);
-
-                        // Afficher les valeurs après conversion
-                        console.log(`Nom: ${name}, Latitude: ${lat}, Longitude: ${lng}`);
-
-                        // Vérifier que les coordonnées sont valides
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            console.log(`Ajout du marqueur : ${name} (Lat: ${lat}, Lng: ${lng})`); // Debug
-                            L.marker([lat, lng]).addTo(map)
-                                .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
-                            markersLoaded++;
-                        } else {
-                            console.log(`Coordonnées invalides pour le point : ${name}`); // Debug
-                        }
-                    }
-                });
-
-                if (markersLoaded === 0) {
-                    console.log("Aucun marqueur ajouté. Vérifie les données CSV."); // Debug
+                // Vérifier que les coordonnées sont valides
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    console.log(`Ajout du marqueur : ${name} (Lat: ${lat}, Lng: ${lng})`); // Debug
+                    L.marker([lat, lng]).addTo(map)
+                        .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
+                    markersLoaded++;
+                } else {
+                    console.log(`Coordonnées invalides pour le point : ${name}`); // Debug
                 }
-
-            } catch (error) {
-                console.error('Erreur lors du chargement des données CSV :', error);
-                alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
             }
+        });
+
+        if (markersLoaded === 0) {
+            console.log("Aucun marqueur ajouté. Vérifie les données CSV."); // Debug
         }
+
+    } catch (error) {
+        console.error('Erreur lors du chargement des données CSV :', error);
+        alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
+    }
+}
+
 
         loadMarkers(); // Charger les marqueurs sur la carte
 
