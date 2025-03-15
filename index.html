@@ -14,7 +14,7 @@
 </head>
 <body>
 
-    <h1>Carte avec marqueurs d'aéroports</h1>
+    <h1>Carte avec marqueurs d'aéroports, bâtiments et avions</h1>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -45,58 +45,32 @@
                 rows.forEach(row => {
                     const cols = row.split(','); // Diviser la ligne en colonnes
 
-                    // Vérifier que la ligne contient au moins les 9 premières colonnes (aéroport, bâtiment et avion)
-                    if (cols.length >= 9) {
-                        const nameA = cols[0].trim(); // Nom de l'aéroport
-                        const latA = parseFloat(cols[1].trim().replace(',', '.')); // Latitude de l'aéroport
-                        const lngA = parseFloat(cols[2].trim().replace(',', '.')); // Longitude de l'aéroport
-
-                        const nameE = cols[4].trim(); // Nom du bâtiment
-                        const latE = parseFloat(cols[5].trim().replace(',', '.')); // Latitude du bâtiment
-                        const lngE = parseFloat(cols[6].trim().replace(',', '.')); // Longitude du bâtiment
-
-                        const nameI = cols[9].trim(); // Nom de l'avion
-                        const latI = parseFloat(cols[10].trim().replace(',', '.')); // Latitude de l'avion
-                        const lngI = parseFloat(cols[11].trim().replace(',', '.')); // Longitude de l'avion
+                    // Vérifier que la ligne contient les 4 éléments nécessaires : Nom, Latitude, Longitude, Image
+                    if (cols.length >= 4) {
+                        const name = cols[0].trim(); // Nom de l'élément (Aéroport, Bâtiment, Avion)
+                        const lat = parseFloat(cols[1].trim().replace(',', '.')); // Latitude
+                        const lng = parseFloat(cols[2].trim().replace(',', '.')); // Longitude
+                        const imageUrl = cols[3].trim(); // URL de l'image
 
                         // Affichage pour déboguer chaque ligne traitée
                         console.log(`Traitement ligne: ${cols}`);
 
-                        // Ajouter le marqueur aéroport si les valeurs de latitude et longitude sont valides
-                        if (!isNaN(latA) && !isNaN(lngA)) {
-                            L.marker([latA, lngA]).addTo(map)
-                                .bindPopup(`<strong>${nameA}</strong><br>Lat: ${latA}, Lng: ${lngA}`);
-                            markersLoaded++;
-                        } else {
-                            console.log(`Marqueur aéroport ignoré pour ${nameA}, Latitude: ${latA}, Longitude: ${lngA}`);
-                        }
+                        // Ajouter le marqueur si les valeurs de latitude et longitude sont valides
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            // Créer l'icône à partir de l'URL de l'image
+                            const icon = L.icon({
+                                iconUrl: imageUrl,
+                                iconSize: [32, 32], // Taille de l'icône
+                                iconAnchor: [16, 32], // Point d'ancrage de l'icône
+                                popupAnchor: [0, -32] // Point d'ancrage du popup
+                            });
 
-                        // Ajouter le marqueur bâtiment si les valeurs de latitude et longitude sont valides
-                        if (!isNaN(latE) && !isNaN(lngE)) {
-                            L.marker([latE, lngE], {
-                                icon: L.icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/3416618.png', // URL brute pour l'icône du bâtiment
-                                    iconSize: [32, 32]
-                                })
-                            }).addTo(map)
-                            .bindPopup(`<strong>${nameE}</strong><br>Lat: ${latE}, Lng: ${lngE}`);
+                            // Ajouter le marqueur à la carte
+                            L.marker([lat, lng], { icon }).addTo(map)
+                                .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
                             markersLoaded++;
                         } else {
-                            console.log(`Marqueur bâtiment ignoré pour ${nameE}, Latitude: ${latE}, Longitude: ${lngE}`);
-                        }
-
-                        // Ajouter le marqueur avion si les valeurs de latitude et longitude sont valides
-                        if (!isNaN(latI) && !isNaN(lngI)) {
-                            L.marker([latI, lngI], {
-                                icon: L.icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/56426380-ic%C3%B4ne-de-l-avion-bleu-plan-isol%C3%A9-sur-fond-blanc.jpg', // URL brute pour l'icône de l'avion
-                                    iconSize: [32, 32]
-                                })
-                            }).addTo(map)
-                            .bindPopup(`<strong>${nameI}</strong><br>Lat: ${latI}, Lng: ${lngI}`);
-                            markersLoaded++;
-                        } else {
-                            console.log(`Marqueur avion ignoré pour ${nameI}, Latitude: ${latI}, Longitude: ${lngI}`);
+                            console.log(`Marqueur ignoré pour ${name}, Latitude: ${lat}, Longitude: ${lng}`);
                         }
                     } else {
                         console.log(`Ligne ignorée : nombre insuffisant de colonnes - ${row}`);
