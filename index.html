@@ -27,7 +27,7 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        // URL du fichier CSV (remplace ceci par l'URL de ton fichier CSV)
+        // URL du fichier CSV
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
 
         // Fonction pour charger les marqueurs depuis le fichier CSV
@@ -44,35 +44,35 @@
                 // Parcourir toutes les lignes du CSV
                 rows.forEach(row => {
                     const cols = row.split(','); // Diviser la ligne en colonnes
-                    if (cols.length >= 12) {  // Vérifie que la ligne contient suffisamment de colonnes
-                        const nameA = cols[0].trim(); // Nom du point (colonne A)
-                        const latA = parseFloat(cols[1].trim().replace(',', '.')); // Latitude (colonne B)
-                        const lngA = parseFloat(cols[2].trim().replace(',', '.')); // Longitude (colonne C)
 
-                        const nameE = cols[4].trim(); // Nom du bâtiment (colonne E)
-                        const latE = parseFloat(cols[5].trim().replace(',', '.')); // Latitude bâtiment (colonne F)
-                        const lngE = parseFloat(cols[6].trim().replace(',', '.')); // Longitude bâtiment (colonne G)
+                    // Vérifier qu'il y a suffisamment de colonnes (12)
+                    if (cols.length >= 12) {
+                        const nameA = cols[0].trim(); // Nom de l'aéroport
+                        const latA = parseFloat(cols[1].trim().replace(',', '.')); // Latitude
+                        const lngA = parseFloat(cols[2].trim().replace(',', '.')); // Longitude
 
-                        const nameI = cols[9].trim(); // Nom de l'avion (colonne I)
-                        const latI = parseFloat(cols[10].trim().replace(',', '.')); // Latitude avion (colonne I)
-                        const lngI = parseFloat(cols[11].trim().replace(',', '.')); // Longitude avion (colonne J)
+                        const nameE = cols[4].trim(); // Nom du bâtiment
+                        const latE = parseFloat(cols[5].trim().replace(',', '.')); // Latitude bâtiment
+                        const lngE = parseFloat(cols[6].trim().replace(',', '.')); // Longitude bâtiment
 
-                        // Afficher les valeurs dans la console pour vérifier
-                        console.log(`Traitement du point : ${nameA}, Latitude: ${latA}, Longitude: ${lngA}`);
-                        console.log(`Traitement du bâtiment : ${nameE}, Latitude: ${latE}, Longitude: ${lngE}`);
-                        console.log(`Traitement de l'avion : ${nameI}, Latitude: ${latI}, Longitude: ${lngI}`);
+                        const nameI = cols[9].trim(); // Nom de l'avion
+                        const latI = parseFloat(cols[10].trim().replace(',', '.')); // Latitude avion
+                        const lngI = parseFloat(cols[11].trim().replace(',', '.')); // Longitude avion
 
-                        // Ajouter le marqueur simple pour les aéroports
+                        // Affichage pour déboguer chaque ligne traitée
+                        console.log(`Traitement ligne: ${cols}`);
+
+                        // Ajouter le marqueur aéroport si les valeurs de latitude et longitude sont valides
                         if (!isNaN(latA) && !isNaN(lngA)) {
-                            console.log(`Ajout du marqueur aéroport : ${nameA} (Lat: ${latA}, Lng: ${lngA})`);
                             L.marker([latA, lngA]).addTo(map)
                                 .bindPopup(`<strong>${nameA}</strong><br>Lat: ${latA}, Lng: ${lngA}`);
                             markersLoaded++;
+                        } else {
+                            console.log(`Marqueur aéroport ignoré pour ${nameA}, Latitude: ${latA}, Longitude: ${lngA}`);
                         }
 
-                        // Ajouter le marqueur bâtiment
+                        // Ajouter le marqueur bâtiment si les valeurs de latitude et longitude sont valides
                         if (!isNaN(latE) && !isNaN(lngE)) {
-                            console.log(`Ajout du marqueur bâtiment : ${nameE} (Lat: ${latE}, Lng: ${lngE})`);
                             L.marker([latE, lngE], {
                                 icon: L.icon({
                                     iconUrl: 'https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/3416618.png', // URL brute pour l'icône du bâtiment
@@ -81,23 +81,29 @@
                             }).addTo(map)
                             .bindPopup(`<strong>${nameE}</strong><br>Lat: ${latE}, Lng: ${lngE}`);
                             markersLoaded++;
+                        } else {
+                            console.log(`Marqueur bâtiment ignoré pour ${nameE}, Latitude: ${latE}, Longitude: ${lngE}`);
                         }
 
-                        // Ajouter le marqueur avion
+                        // Ajouter le marqueur avion si les valeurs de latitude et longitude sont valides
                         if (!isNaN(latI) && !isNaN(lngI)) {
-                            console.log(`Ajout du marqueur avion : ${nameI} (Lat: ${latI}, Lng: ${lngI})`);
                             L.marker([latI, lngI], {
                                 icon: L.icon({
-                                    iconUrl: 'https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/56426380-ic%C3%B4ne-de-l-avion-bleu-plan-isol%C3%A9-sur-fond-blanc.jpg', // URL brute pour l'icône avion
+                                    iconUrl: 'https://raw.githubusercontent.com/D1git4l/mapAirbus/18a4d829b6f075649bff5e3e21080db7d1b9023e/56426380-ic%C3%B4ne-de-l-avion-bleu-plan-isol%C3%A9-sur-fond-blanc.jpg', // URL brute pour l'icône de l'avion
                                     iconSize: [32, 32]
                                 })
                             }).addTo(map)
                             .bindPopup(`<strong>${nameI}</strong><br>Lat: ${latI}, Lng: ${lngI}`);
                             markersLoaded++;
+                        } else {
+                            console.log(`Marqueur avion ignoré pour ${nameI}, Latitude: ${latI}, Longitude: ${lngI}`);
                         }
+                    } else {
+                        console.log(`Ligne ignorée : mauvaise structure - ${row}`);
                     }
                 });
 
+                // Afficher un message si aucun marqueur n'a été ajouté
                 if (markersLoaded === 0) {
                     console.log("Aucun marqueur ajouté. Vérifie les données CSV.");
                 }
