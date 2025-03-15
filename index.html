@@ -49,9 +49,17 @@
                     const cols = row.split(','); // Diviser la ligne en colonnes
                     if (cols.length >= 3) {
                         const name = cols[0].trim(); // Nom du point (colonne A)
+
                         // Remplacer les virgules par des points pour les coordonnées
-                        const lng = parseFloat(cols[1].trim().replace(',', '.')); // Longitude (colonne B)
-                        const lat = parseFloat(cols[2].trim().replace(',', '.')); // Latitude (colonne C)
+                        let lng = cols[1].trim().replace(',', '.'); // Longitude (colonne B)
+                        let lat = cols[2].trim().replace(',', '.'); // Latitude (colonne C)
+
+                        // Vérifier les valeurs avant la conversion en float
+                        console.log(`Traitement du point : ${name}, Latitude: ${lat}, Longitude: ${lng}`);
+
+                        // Convertir en nombre
+                        lng = parseFloat(lng);
+                        lat = parseFloat(lat);
 
                         // Afficher les valeurs dans la console pour vérifier
                         console.log(`Nom: ${name}, Latitude: ${lat}, Longitude: ${lng}`);
