@@ -7,7 +7,15 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <style>
-        #map { height: 600px; width: 100%; }
+        /* Assure-toi que la carte prend toute la hauteur de l'écran */
+        body, html {
+            height: 100%;
+            margin: 0;
+        }
+        #map {
+            height: 100%;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
@@ -15,17 +23,21 @@
     <div id="map"></div>
 
     <script>
-        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/1XeNSL5uGvEs2YffUxcDWHfenT37o2l4nxruZBqnaiMU/pub?gid=NUMÉRO_DE_LA_PAGE&output=csv';
+        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/VOTRE_ID_DE_FICHIER/pub?gid=NUMÉRO_DE_LA_PAGE&output=csv';
 
+        // Créer la carte et définir son centre et son niveau de zoom
         const map = L.map('map').setView([48.8566, 2.3522], 6); // Centré sur la France
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+
+        // Utilisation d'un service de tuiles alternatif (CartoDB Positron)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/attributions">CartoDB</a>'
         }).addTo(map);
 
+        // Fonction pour charger et afficher les marqueurs
         async function loadMarkers() {
             const response = await fetch(sheetURL);
             const csvText = await response.text();
-            const rows = csvText.split('\n').slice(1);
+            const rows = csvText.split('\n').slice(1); // Sauter la première ligne (entêtes)
 
             rows.forEach(row => {
                 const cols = row.split(',');
@@ -35,6 +47,7 @@
                     const lng = parseFloat(cols[2]); // Longitude
 
                     if (!isNaN(lat) && !isNaN(lng)) {
+                        // Ajouter un marqueur pour chaque point avec un pop-up
                         L.marker([lat, lng]).addTo(map)
                             .bindPopup(`<strong>${name}</strong><br>Lat: ${lat}, Lng: ${lng}`);
                     }
@@ -42,7 +55,11 @@
             });
         }
 
+        // Appeler la fonction pour charger les marqueurs
         loadMarkers();
+
+        // Ajouter des contrôles de zoom à la carte (par défaut, ils sont ajoutés automatiquement par Leaflet)
+        L.control.zoom().addTo(map);
     </script>
 </body>
 </html>
