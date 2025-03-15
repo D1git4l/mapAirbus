@@ -48,9 +48,9 @@
                 rows.slice(229, 239).forEach(row => {
                     const cols = row.split(','); // Diviser la ligne en colonnes
                     if (cols.length >= 3) {
-                        const name = cols[0].trim(); // Nom du point (première colonne)
-                        const lat = parseFloat(cols[1].trim()); // Latitude (deuxième colonne)
-                        const lng = parseFloat(cols[2].trim()); // Longitude (troisième colonne)
+                        const name = cols[0].trim(); // Nom du point (colonne A)
+                        const lng = parseFloat(cols[1].trim()); // Longitude (colonne B)
+                        const lat = parseFloat(cols[2].trim()); // Latitude (colonne C)
 
                         // Afficher les valeurs dans la console pour vérifier
                         console.log(`Nom: ${name}, Latitude: ${lat}, Longitude: ${lng}`);
