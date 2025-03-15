@@ -7,8 +7,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
         #map {
-            width: 1920px; /* Largeur de la carte */
-            height: 1080px; /* Hauteur de la carte */
+            width: 100%; /* Largeur de la carte */
+            height: 600px; /* Hauteur de la carte */
         }
     </style>
 </head>
@@ -45,19 +45,19 @@
                 rows.forEach(row => {
                     const cols = row.split(','); // Diviser la ligne en colonnes
 
-                    // Vérifier qu'il y a suffisamment de colonnes (12)
-                    if (cols.length >= 12) {
+                    // Vérifier que la ligne contient au moins les 9 premières colonnes (aéroport, bâtiment et avion)
+                    if (cols.length >= 9) {
                         const nameA = cols[0].trim(); // Nom de l'aéroport
-                        const latA = parseFloat(cols[1].trim().replace(',', '.')); // Latitude
-                        const lngA = parseFloat(cols[2].trim().replace(',', '.')); // Longitude
+                        const latA = parseFloat(cols[1].trim().replace(',', '.')); // Latitude de l'aéroport
+                        const lngA = parseFloat(cols[2].trim().replace(',', '.')); // Longitude de l'aéroport
 
                         const nameE = cols[4].trim(); // Nom du bâtiment
-                        const latE = parseFloat(cols[5].trim().replace(',', '.')); // Latitude bâtiment
-                        const lngE = parseFloat(cols[6].trim().replace(',', '.')); // Longitude bâtiment
+                        const latE = parseFloat(cols[5].trim().replace(',', '.')); // Latitude du bâtiment
+                        const lngE = parseFloat(cols[6].trim().replace(',', '.')); // Longitude du bâtiment
 
                         const nameI = cols[9].trim(); // Nom de l'avion
-                        const latI = parseFloat(cols[10].trim().replace(',', '.')); // Latitude avion
-                        const lngI = parseFloat(cols[11].trim().replace(',', '.')); // Longitude avion
+                        const latI = parseFloat(cols[10].trim().replace(',', '.')); // Latitude de l'avion
+                        const lngI = parseFloat(cols[11].trim().replace(',', '.')); // Longitude de l'avion
 
                         // Affichage pour déboguer chaque ligne traitée
                         console.log(`Traitement ligne: ${cols}`);
@@ -99,7 +99,7 @@
                             console.log(`Marqueur avion ignoré pour ${nameI}, Latitude: ${latI}, Longitude: ${lngI}`);
                         }
                     } else {
-                        console.log(`Ligne ignorée : mauvaise structure - ${row}`);
+                        console.log(`Ligne ignorée : nombre insuffisant de colonnes - ${row}`);
                     }
                 });
 
