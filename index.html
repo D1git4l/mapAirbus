@@ -14,7 +14,8 @@
 </head>
 <body>
     <h1>Carte avec marqueurs d'aéroports</h1>
-    <button onclick="toggleMarkers()">Afficher/Masquer les marqueurs</button>
+    <button onclick="toggleMarkers()">Afficher/Masquer les marqueurs Aéroports</button>
+    <button onclick="toggleMarkersBase2()">Afficher/Masquer les marqueurs Base de Données 2</button>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -28,8 +29,9 @@
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
         let markersLayer = L.layerGroup().addTo(map);
+        let markersLayerBase2 = L.layerGroup().addTo(map);  // Nouvelle couche de marqueurs
 
-        async function chargerMarqueurs() {
+        async function chargerMarqueurs(sheetName, markersLayer) {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
@@ -71,6 +73,14 @@
             }
         }
 
+        function toggleMarkersBase2() {
+            if (map.hasLayer(markersLayerBase2)) {
+                map.removeLayer(markersLayerBase2);
+            } else {
+                map.addLayer(markersLayerBase2);
+            }
+        }
+
         // Ajout de l'outil de mesure de distance en milles nautiques
         const measureControl = new L.Control.Measure({
             primaryLengthUnit: "nauticalMiles",
@@ -81,8 +91,13 @@
         });
         map.addControl(measureControl);
 
-        chargerMarqueurs();
+        // Charger les marqueurs pour la feuille 1
+        chargerMarqueurs('Aéroports', markersLayer);
+
+        // Charger les marqueurs pour la feuille Base de Données 2
+        chargerMarqueurs('Base de Données 2', markersLayerBase2);
     </script>
 </body>
 </html>
+
 
