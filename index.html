@@ -53,7 +53,7 @@
                             });
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng});
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
                             markersLayer.addLayer(marker);
                         }
                     }
