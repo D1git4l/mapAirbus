@@ -40,19 +40,23 @@
         }).addTo(map);
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
-        let markersLayer = L.layerGroup().addTo(map);
-        let markersPrincipalVisible = true;  // Les marqueurs principaux (lignes 1 à 17) sont visibles par défaut
-        let markersSupplementaireVisible = false;  // Les marqueurs (lignes 18 à 500) sont cachés par défaut
+        
+        let markersLayer = L.layerGroup().addTo(map);  // Calque pour les marqueurs des lignes 1 à 17
+        let markersSupplementaireLayer = L.layerGroup().addTo(map);  // Calque pour les marqueurs des lignes 18 à 500
+        let markersSupplementaireVisible = false;  // Les marqueurs supplémentaires sont cachés par défaut
 
+        // Fonction pour charger et afficher les marqueurs
         async function chargerMarqueurs() {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
                 const lignes = texteCSV.split('\n').slice(1); // Ignore la première ligne (en-têtes)
 
+                // Effacer les marqueurs existants
                 markersLayer.clearLayers();
+                markersSupplementaireLayer.clearLayers();
 
-                // Charger et afficher les lignes 1 à 17 (aéroports principaux)
+                // Charger et afficher les lignes 1 à 17 (aéroports principaux) : Toujours affichés
                 const lignesPrincipales = lignes.slice(0, 17);  // Les 17 premières lignes
                 lignesPrincipales.forEach(ligne => {
                     const colonnes = ligne.split(',');
@@ -72,12 +76,12 @@
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                 .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersLayer.addLayer(marker);
+                            markersLayer.addLayer(marker);  // Marqueurs des lignes 1 à 17 ajoutés au groupe principal
                         }
                     }
                 });
 
-                // Charger et afficher les lignes 18 à 500 (aéroports supplémentaires) si visibles
+                // Charger et afficher les lignes 18 à 500 (aéroports supplémentaires) uniquement si visibles
                 if (markersSupplementaireVisible) {
                     const lignesSupplementaires = lignes.slice(17, 500);  // De la ligne 18 à la 500ème
                     lignesSupplementaires.forEach(ligne => {
@@ -98,11 +102,12 @@
 
                                 const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                     .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                                markersLayer.addLayer(marker);
+                                markersSupplementaireLayer.addLayer(marker);  // Marqueurs des lignes 18 à 500 ajoutés au groupe séparé
                             }
                         }
                     });
                 }
+
             } catch (erreur) {
                 console.error('Erreur lors du chargement des données CSV :', erreur);
             }
@@ -131,3 +136,4 @@
     </script>
 </body>
 </html>
+
