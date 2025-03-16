@@ -14,7 +14,7 @@
 </head>
 <body>
     <h1>Carte avec marqueurs d'aéroports</h1>
-    <button onclick="toggleMarkersBase2()">Afficher/Masquer les marqueurs Base de Données 2</button>
+    <button onclick="toggleMarkers()">Afficher/Masquer les marqueurs</button>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -26,29 +26,22 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributeurs'
         }).addTo(map);
 
-        // URLs pour les feuilles CSV
-        const sheetURLBase1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv'; // Première feuille
-        const sheetURLBase2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=241222829&single=true&output=csv'; // Base de Données 2
+        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
+        let markersLayer = L.layerGroup().addTo(map);
 
-        const markersLayer = L.layerGroup().addTo(map);  // Couche de marqueurs Aéroports (toujours visibles)
-        const markersLayerBase2 = L.layerGroup();  // Couche de marqueurs Base de Données 2 (masquée au départ)
-
-        async function chargerMarqueurs(sheetURL, markersLayer) {
+        async function chargerMarqueurs() {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1);  // Supprimer l'en-tête
+                const lignes = texteCSV.split('\n').slice(1);
 
-                markersLayer.clearLayers();  // Réinitialiser la couche avant d'ajouter les marqueurs
-
+                markersLayer.clearLayers();
                 lignes.forEach(ligne => {
                     const colonnes = ligne.split(',');
-
-                    // Assurez-vous que le CSV est correctement formé
                     if (colonnes.length >= 4) {
                         const nom = colonnes[0].trim();
-                        const lat = parseFloat(colonnes[1].trim());  // Suppression du remplacement des virgules par des points
-                        const lng = parseFloat(colonnes[2].trim());  // Suppression du remplacement des virgules par des points
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
                         const iconeUrl = colonnes[3].trim();
 
                         if (!isNaN(lat) && !isNaN(lng)) {
@@ -60,7 +53,7 @@
                             });
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                                .bindPopup(<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng});
                             markersLayer.addLayer(marker);
                         }
                     }
@@ -70,12 +63,11 @@
             }
         }
 
-        // Fonction pour basculer l'affichage des marqueurs de la Base de Données 2
-        function toggleMarkersBase2() {
-            if (map.hasLayer(markersLayerBase2)) {
-                map.removeLayer(markersLayerBase2);
+        function toggleMarkers() {
+            if (map.hasLayer(markersLayer)) {
+                map.removeLayer(markersLayer);
             } else {
-                map.addLayer(markersLayerBase2);
+                map.addLayer(markersLayer);
             }
         }
 
@@ -89,9 +81,7 @@
         });
         map.addControl(measureControl);
 
-        // Charger les marqueurs des deux feuilles
-        chargerMarqueurs(sheetURLBase1, markersLayer);  // Toujours visibles (Feuille 1)
-        chargerMarqueurs(sheetURLBase2, markersLayerBase2);  // Masqués par défaut (Base de Données 2)
+        chargerMarqueurs();
     </script>
 </body>
 </html>
