@@ -27,7 +27,7 @@
 </head>
 <body>
     <h1>Carte avec marqueurs d'aéroports</h1>
-    <button id="toggleMarkersButton">Afficher/masquer marqueurs</button>
+    <button id="toggleMarkersButton">Aéroports principaux</button>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -41,7 +41,8 @@
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
         let markersLayer = L.layerGroup().addTo(map);
-        let markersVisible = false;  // Variable pour savoir si les marqueurs sont visibles ou non
+        let markersPrincipalVisible = true;  // Les marqueurs principaux (lignes 1 à 17) sont visibles par défaut
+        let markersSupplementaireVisible = false;  // Les marqueurs (lignes 18 à 500) sont cachés par défaut
 
         async function chargerMarqueurs() {
             try {
@@ -51,10 +52,9 @@
 
                 markersLayer.clearLayers();
 
-                // Charger uniquement les lignes 18 à 500 (index 17 à 499)
-                const lignesFiltrees = lignes.slice(17, 500);
-
-                lignesFiltrees.forEach(ligne => {
+                // Charger et afficher les lignes 1 à 17 (aéroports principaux)
+                const lignesPrincipales = lignes.slice(0, 17);  // Les 17 premières lignes
+                lignesPrincipales.forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
                         const nom = colonnes[0].trim();
@@ -76,6 +76,33 @@
                         }
                     }
                 });
+
+                // Charger et afficher les lignes 18 à 500 (aéroports supplémentaires) si visibles
+                if (markersSupplementaireVisible) {
+                    const lignesSupplementaires = lignes.slice(17, 500);  // De la ligne 18 à la 500ème
+                    lignesSupplementaires.forEach(ligne => {
+                        const colonnes = ligne.split(',');
+                        if (colonnes.length >= 4) {
+                            const nom = colonnes[0].trim();
+                            const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                            const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                            const iconeUrl = colonnes[3].trim();
+
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                const iconePersonnalisee = L.icon({
+                                    iconUrl: iconeUrl,
+                                    iconSize: [32, 32],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -32]
+                                });
+
+                                const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                    .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                                markersLayer.addLayer(marker);
+                            }
+                        }
+                    });
+                }
             } catch (erreur) {
                 console.error('Erreur lors du chargement des données CSV :', erreur);
             }
@@ -91,20 +118,16 @@
         });
         map.addControl(measureControl);
 
-        // Fonction pour afficher/masquer les marqueurs
+        // Fonction pour afficher/masquer les marqueurs supplémentaires (lignes 18 à 500)
         function toggleMarkers() {
-            if (markersVisible) {
-                markersLayer.clearLayers();
-            } else {
-                chargerMarqueurs();
-            }
-            markersVisible = !markersVisible;
+            markersSupplementaireVisible = !markersSupplementaireVisible;
+            chargerMarqueurs();  // Recharger les marqueurs après avoir changé la visibilité
         }
 
-        // Ajouter un écouteur d'événements au bouton pour afficher/masquer les marqueurs
+        // Ajouter un écouteur d'événements au bouton pour afficher/masquer les marqueurs supplémentaires
         document.getElementById('toggleMarkersButton').addEventListener('click', toggleMarkers);
 
-        chargerMarqueurs();
+        chargerMarqueurs();  // Charger initialement les marqueurs principaux (lignes 1 à 17)
     </script>
 </body>
 </html>
