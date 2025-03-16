@@ -28,22 +28,21 @@
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
         
-        // Couche pour les marqueurs de la première feuille (Aéroports)
-        const markersLayer = L.layerGroup().addTo(map);
+        const markersLayer = L.layerGroup().addTo(map);  // Couche de marqueurs Aéroports (toujours visibles)
+        const markersLayerBase2 = L.layerGroup();  // Couche de marqueurs Base de Données 2 (masquée au départ)
 
-        // Couche pour les marqueurs de la deuxième feuille (Base de Données 2)
-        const markersLayerBase2 = L.layerGroup();
-
-        // Charger les marqueurs de la feuille Aéroports (toujours visibles)
         async function chargerMarqueurs(sheetName, markersLayer) {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1);
+                const lignes = texteCSV.split('\n').slice(1);  // Supprimer l'en-tête
 
-                markersLayer.clearLayers();
+                markersLayer.clearLayers();  // Réinitialiser la couche avant d'ajouter les marqueurs
+
                 lignes.forEach(ligne => {
                     const colonnes = ligne.split(',');
+
+                    // Assurez-vous que le CSV est correctement formé
                     if (colonnes.length >= 4) {
                         const nom = colonnes[0].trim();
                         const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
@@ -69,16 +68,18 @@
             }
         }
 
-        // Charger les marqueurs de la feuille Base de Données 2 (masquée au départ)
         async function chargerMarqueursBase2() {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1);
+                const lignes = texteCSV.split('\n').slice(1);  // Supprimer l'en-tête
 
-                markersLayerBase2.clearLayers();
+                markersLayerBase2.clearLayers();  // Réinitialiser la couche avant d'ajouter les marqueurs
+
                 lignes.forEach(ligne => {
                     const colonnes = ligne.split(',');
+
+                    // Assurez-vous que le CSV est correctement formé
                     if (colonnes.length >= 4) {
                         const nom = colonnes[0].trim();
                         const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
@@ -100,7 +101,7 @@
                     }
                 });
             } catch (erreur) {
-                console.error('Erreur lors du chargement des données CSV :', erreur);
+                console.error('Erreur lors du chargement des données CSV (Base de Données 2):', erreur);
             }
         }
 
@@ -129,3 +130,4 @@
     </script>
 </body>
 </html>
+
