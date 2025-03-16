@@ -85,15 +85,20 @@
                 // Charger et afficher les lignes 18 à 500 (aéroports supplémentaires) uniquement si visibles
                 if (markersSupplementaireVisible) {
                     const lignesSupplementaires = lignes.slice(17, 500);  // De la ligne 18 à la 500ème
-                    lignesSupplementaires.forEach(ligne => {
+                    lignesSupplementaires.forEach((ligne, index) => {
                         const colonnes = ligne.split(',');
                         if (colonnes.length >= 4) {
                             const nom = colonnes[0].trim();
-                            const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                            const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                            let lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                            let lng = parseFloat(colonnes[2].trim().replace(',', '.'));
                             const iconeUrl = colonnes[3].trim();
 
                             if (!isNaN(lat) && !isNaN(lng)) {
+                                // Appliquer un décalage aux marqueurs des lignes 18 à 500
+                                const offset = 0.001 * (index % 2 === 0 ? 1 : -1); // Décalage léger (variable)
+                                lat += offset;
+                                lng += offset;
+
                                 const iconePersonnalisee = L.icon({
                                     iconUrl: iconeUrl,
                                     iconSize: [32, 32],
