@@ -14,7 +14,6 @@
 </head>
 <body>
     <h1>Carte avec marqueurs d'aéroports</h1>
-    <button onclick="toggleMarkers()">Afficher/Masquer les marqueurs Aéroports</button>
     <button onclick="toggleMarkersBase2()">Afficher/Masquer les marqueurs Base de Données 2</button>
     <div id="map"></div>
 
@@ -28,9 +27,14 @@
         }).addTo(map);
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
-        let markersLayer = L.layerGroup().addTo(map);
-        let markersLayerBase2 = L.layerGroup().addTo(map);  // Nouvelle couche de marqueurs
+        
+        // Couche pour les marqueurs de la première feuille (Aéroports)
+        const markersLayer = L.layerGroup().addTo(map);
 
+        // Couche pour les marqueurs de la deuxième feuille (Base de Données 2)
+        const markersLayerBase2 = L.layerGroup();
+
+        // Charger les marqueurs de la feuille Aéroports (toujours visibles)
         async function chargerMarqueurs(sheetName, markersLayer) {
             try {
                 const reponse = await fetch(sheetURL);
@@ -65,14 +69,42 @@
             }
         }
 
-        function toggleMarkers() {
-            if (map.hasLayer(markersLayer)) {
-                map.removeLayer(markersLayer);
-            } else {
-                map.addLayer(markersLayer);
+        // Charger les marqueurs de la feuille Base de Données 2 (masquée au départ)
+        async function chargerMarqueursBase2() {
+            try {
+                const reponse = await fetch(sheetURL);
+                const texteCSV = await reponse.text();
+                const lignes = texteCSV.split('\n').slice(1);
+
+                markersLayerBase2.clearLayers();
+                lignes.forEach(ligne => {
+                    const colonnes = ligne.split(',');
+                    if (colonnes.length >= 4) {
+                        const nom = colonnes[0].trim();
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                        const iconeUrl = colonnes[3].trim();
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const iconePersonnalisee = L.icon({
+                                iconUrl: iconeUrl,
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
+
+                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                            markersLayerBase2.addLayer(marker);
+                        }
+                    }
+                });
+            } catch (erreur) {
+                console.error('Erreur lors du chargement des données CSV :', erreur);
             }
         }
 
+        // Fonction pour basculer l'affichage des marqueurs de la Base de Données 2
         function toggleMarkersBase2() {
             if (map.hasLayer(markersLayerBase2)) {
                 map.removeLayer(markersLayerBase2);
@@ -91,13 +123,9 @@
         });
         map.addControl(measureControl);
 
-        // Charger les marqueurs pour la feuille 1
-        chargerMarqueurs('Aéroports', markersLayer);
-
-        // Charger les marqueurs pour la feuille Base de Données 2
-        chargerMarqueurs('Base de Données 2', markersLayerBase2);
+        // Charger les marqueurs des deux feuilles
+        chargerMarqueurs('Aéroports', markersLayer);  // Toujours visibles
+        chargerMarqueursBase2();  // Masqués par défaut
     </script>
 </body>
 </html>
-
-
