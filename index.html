@@ -41,8 +41,9 @@
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
         
-        let markersLayer = L.layerGroup().addTo(map);  // Calque pour les marqueurs des lignes 1 à 17
-        let markersSupplementaireLayer = L.layerGroup().addTo(map);  // Calque pour les marqueurs des lignes 18 à 500
+        // Groupe de calques pour les marqueurs
+        let markersLayer = L.layerGroup().addTo(map);  // Marqueurs des lignes 1 à 17
+        let markersSupplementaireLayer = L.layerGroup().addTo(map);  // Marqueurs des lignes 18 à 500
         let markersSupplementaireVisible = false;  // Les marqueurs supplémentaires sont cachés par défaut
 
         // Fonction pour charger et afficher les marqueurs
@@ -136,4 +137,3 @@
     </script>
 </body>
 </html>
-
