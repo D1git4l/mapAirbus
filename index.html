@@ -28,7 +28,7 @@
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
         let markersLayer = L.layerGroup().addTo(map);
-        
+
         async function chargerMarqueurs() {
             try {
                 const reponse = await fetch(sheetURL);
@@ -71,10 +71,10 @@
             }
         }
 
-        // Ajout de l'outil de mesure de distance
+        // Ajout de l'outil de mesure de distance en milles nautiques
         const measureControl = new L.Control.Measure({
-            primaryLengthUnit: "kilometers",
-            secondaryLengthUnit: "meters",
+            primaryLengthUnit: "nauticalMiles",
+            secondaryLengthUnit: "kilometers",
             activeColor: "#ff0000",
             completedColor: "#00ff00",
             position: "topleft"
@@ -85,3 +85,4 @@
     </script>
 </body>
 </html>
+
