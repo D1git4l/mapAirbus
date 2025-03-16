@@ -5,84 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carte avec marqueurs</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css">
     <style>
-        #map {
-            width: 1920px; /* Largeur de la carte */
-            height: 1080px; /* Hauteur de la carte */
-        }
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #map { width: 100%; height: 80vh; margin: auto; }
+        button { margin: 10px; padding: 10px; font-size: 16px; cursor: pointer; }
     </style>
 </head>
 <body>
-
     <h1>Carte avec marqueurs d'aéroports</h1>
+    <button onclick="toggleMarkers()">Afficher/Masquer les marqueurs</button>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        // Initialisation de la carte centrée sur le monde
-        const map = L.map('map').setView([20, 0], 2); // Coordonnées centrales du monde
+    <script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.js"></script>
 
-        // Ajout de la couche de tuiles en français
+    <script>
+        const map = L.map('map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributeurs'
         }).addTo(map);
 
-        // URL du fichier CSV
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
-
-        // Fonction pour charger les marqueurs depuis le fichier CSV
+        let markersLayer = L.layerGroup().addTo(map);
+        
         async function chargerMarqueurs() {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1); // Ignorer la première ligne (en-têtes)
+                const lignes = texteCSV.split('\n').slice(1);
 
-                console.log('CSV chargé avec succès : ', texteCSV);
-
-                let marqueursAjoutes = 0;
-
-                // Parcourir toutes les lignes du CSV
+                markersLayer.clearLayers();
                 lignes.forEach(ligne => {
-                    const colonnes = ligne.split(','); // Diviser la ligne en colonnes
+                    const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
-                        const nom = colonnes[0].trim(); // Nom du point (colonne A)
-                        const lat = parseFloat(colonnes[1].trim().replace(',', '.')); // Latitude (colonne B)
-                        const lng = parseFloat(colonnes[2].trim().replace(',', '.')); // Longitude (colonne C)
-                        const iconeUrl = colonnes[3].trim(); // URL de l'icône (colonne D)
+                        const nom = colonnes[0].trim();
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                        const iconeUrl = colonnes[3].trim();
 
-                        // Vérifier que les coordonnées sont valides
                         if (!isNaN(lat) && !isNaN(lng)) {
-                            // Définir une icône personnalisée
                             const iconePersonnalisee = L.icon({
                                 iconUrl: iconeUrl,
-                                iconSize: [32, 32], // Taille de l'icône
-                                iconAnchor: [16, 32], // Point d'ancrage de l'icône
-                                popupAnchor: [0, -32] // Position du popup
+                                iconSize: [32, 32],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
                             });
 
-                            // Ajouter le marqueur à la carte avec l'icône personnalisée
-                            L.marker([lat, lng], { icon: iconePersonnalisee }).addTo(map)
+                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                 .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            marqueursAjoutes++;
-                        } else {
-                            console.log(`Coordonnées invalides pour le point : ${nom}`);
+                            markersLayer.addLayer(marker);
                         }
                     }
                 });
-
-                if (marqueursAjoutes === 0) {
-                    console.log("Aucun marqueur ajouté. Vérifie les données CSV.");
-                }
-
             } catch (erreur) {
                 console.error('Erreur lors du chargement des données CSV :', erreur);
-                alert('Erreur lors du chargement des données CSV. Vérifie l\'URL ou les données.');
             }
         }
 
-        // Appel de la fonction pour charger les marqueurs
+        function toggleMarkers() {
+            if (map.hasLayer(markersLayer)) {
+                map.removeLayer(markersLayer);
+            } else {
+                map.addLayer(markersLayer);
+            }
+        }
+
+        // Ajout de l'outil de mesure de distance
+        const measureControl = new L.Control.Measure({
+            primaryLengthUnit: "kilometers",
+            secondaryLengthUnit: "meters",
+            activeColor: "#ff0000",
+            completedColor: "#00ff00",
+            position: "topleft"
+        });
+        map.addControl(measureControl);
+
         chargerMarqueurs();
     </script>
-
 </body>
 </html>
