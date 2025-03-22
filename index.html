@@ -101,7 +101,7 @@
                 return refA.localeCompare(refB);  // Trier par ordre alphabétique
             });
 
-            layers[category] = L.layerGroup().addTo(map); // Créer un layer spécifique pour chaque catégorie
+            layers[category] = L.layerGroup(); // Créer un layer spécifique pour chaque catégorie
             sortedRows.forEach(row => {
                 const cols = row.split(',');
                 const lat = parseFloat(cols[1].trim().replace(',', '.'));
@@ -173,8 +173,10 @@
             checkbox.addEventListener('change', function() {
                 const category = this.value;
                 if (this.checked) {
+                    // Si la case est cochée, ajouter le layer
                     if (layers[category]) map.addLayer(layers[category]);
                 } else {
+                    // Si la case est décochée, retirer le layer
                     if (layers[category]) map.removeLayer(layers[category]);
                 }
             });
