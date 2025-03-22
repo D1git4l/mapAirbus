@@ -116,7 +116,9 @@
         const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
         // Groupes de marqueurs
-        let markersIndustriesLayer = L.layerGroup();
+        const airbusLayer = L.layerGroup(); // Layer group for Airbus
+        const mainAirportsLayer = L.layerGroup(); // Layer group for Main Airports
+        const secondaryAirportsLayer = L.layerGroup(); // Layer group for Secondary Airports
         let industryGroups = {
             viande: L.layerGroup(),
             cereal: L.layerGroup(),
@@ -132,11 +134,92 @@
         // Fonction pour charger les marqueurs depuis le CSV
         async function chargerMarqueurs() {
             try {
+                // Charger les marqueurs d'Airbus et des Aéroports principaux
+                const reponse1 = await fetch(sheetURL1);
+                const texteCSV1 = await reponse1.text();
+                const lignes1 = texteCSV1.split('\n').slice(1);
+
+                // Charger les Airbus (lignes 1 à 17)
+                lignes1.slice(1, 17).forEach(ligne => {
+                    const colonnes = ligne.split(',');
+                    if (colonnes.length >= 4) {
+                        const nom = colonnes[0].trim();
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                        const iconeUrl = colonnes[3].trim();
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const iconePersonnalisee = L.icon({
+                                iconUrl: iconeUrl,
+                                iconSize: [50, 50],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
+
+                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+
+                            airbusLayer.addLayer(marker); // Ajouter les marqueurs d'Airbus
+                        }
+                    }
+                });
+
+                // Charger les Aéroports principaux (lignes 18 à 498)
+                lignes1.slice(18, 498).forEach(ligne => {
+                    const colonnes = ligne.split(',');
+                    if (colonnes.length >= 4) {
+                        const nom = colonnes[0].trim();
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                        const iconeUrl = colonnes[3].trim();
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const iconePersonnalisee = L.icon({
+                                iconUrl: iconeUrl,
+                                iconSize: [50, 50],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
+
+                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+
+                            mainAirportsLayer.addLayer(marker); // Ajouter les marqueurs d'Aéroports principaux
+                        }
+                    }
+                });
+
+                // Charger les Aéroports secondaires et les Industries
                 const reponse2 = await fetch(sheetURL2);
                 const texteCSV2 = await reponse2.text();
                 const lignes2 = texteCSV2.split('\n').slice(1);
 
-                // Charger les industries (lignes 4691 à 4724)
+                // Aéroports secondaires (lignes 2 à 4690)
+                lignes2.slice(1, 4690).forEach(ligne => {
+                    const colonnes = ligne.split(',');
+                    if (colonnes.length >= 4) {
+                        const nom = colonnes[0].trim();
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                        const iconeUrl = colonnes[3].trim();
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const iconePersonnalisee = L.icon({
+                                iconUrl: iconeUrl,
+                                iconSize: [50, 50],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
+
+                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+
+                            secondaryAirportsLayer.addLayer(marker); // Ajouter les marqueurs d'Aéroports secondaires
+                        }
+                    }
+                });
+
+                // Industries (lignes 4691 à 4724)
                 lignes2.slice(4691, 4724).forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
@@ -170,6 +253,11 @@
                     }
                 });
 
+                // Ajout initial des layers par défaut
+                map.addLayer(airbusLayer);
+                map.addLayer(mainAirportsLayer);
+                map.addLayer(secondaryAirportsLayer);
+
             } catch (erreur) {
                 console.error('Erreur lors du chargement des données CSV :', erreur);
             }
@@ -181,80 +269,46 @@
             checkboxesContainer.style.display = checkboxesContainer.style.display === 'none' ? 'block' : 'none';
         });
 
-        // Afficher/Masquer les marqueurs de chaque industrie en fonction des cases cochées
-        document.getElementById('viandeCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.viande);
-            } else {
-                map.removeLayer(industryGroups.viande);
-            }
+        // Afficher/Masquer les marqueurs des industries en fonction des cases cochées
+        document.getElementById('viandeCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.viande) : map.removeLayer(industryGroups.viande);
         });
 
-        document.getElementById('cerealCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.cereal);
-            } else {
-                map.removeLayer(industryGroups.cereal);
-            }
+        document.getElementById('cerealCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.cereal) : map.removeLayer(industryGroups.cereal);
         });
 
-        document.getElementById('farineCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.farine);
-            } else {
-                map.removeLayer(industryGroups.farine);
-            }
+        document.getElementById('farineCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.farine) : map.removeLayer(industryGroups.farine);
         });
 
-        document.getElementById('complementCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.complement);
-            } else {
-                map.removeLayer(industryGroups.complement);
-            }
+        document.getElementById('complementCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.complement) : map.removeLayer(industryGroups.complement);
         });
 
-        document.getElementById('plastiqueCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.plastique);
-            } else {
-                map.removeLayer(industryGroups.plastique);
-            }
+        document.getElementById('plastiqueCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.plastique) : map.removeLayer(industryGroups.plastique);
         });
 
-        document.getElementById('usineCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.usine);
-            } else {
-                map.removeLayer(industryGroups.usine);
-            }
+        document.getElementById('usineCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.usine) : map.removeLayer(industryGroups.usine);
         });
 
-        document.getElementById('depotCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.depot);
-            } else {
-                map.removeLayer(industryGroups.depot);
-            }
+        document.getElementById('depotCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.depot) : map.removeLayer(industryGroups.depot);
         });
 
-        document.getElementById('pointsVenteCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.pointsVente);
-            } else {
-                map.removeLayer(industryGroups.pointsVente);
-            }
+        document.getElementById('pointsVenteCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.pointsVente) : map.removeLayer(industryGroups.pointsVente);
         });
 
-        document.getElementById('siropErableCheckbox').addEventListener('change', (event) => {
-            if (event.target.checked) {
-                map.addLayer(industryGroups.siropErable);
-            } else {
-                map.removeLayer(industryGroups.siropErable);
-            }
+        document.getElementById('siropErableCheckbox').addEventListener('change', (e) => {
+            e.target.checked ? map.addLayer(industryGroups.siropErable) : map.removeLayer(industryGroups.siropErable);
         });
 
-        chargerMarqueurs();  // Initialiser les marqueurs à l'ouverture de la carte
+        // Charger les marqueurs au lancement
+        chargerMarqueurs();
     </script>
 </body>
 </html>
+
