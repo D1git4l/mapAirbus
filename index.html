@@ -100,10 +100,10 @@
         const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
         // Groupes de marqueurs
-        let markersAirbusLayer = L.layerGroup().addTo(map);
-        let markersMainAirportsLayer = L.layerGroup().addTo(map);
-        let markersSecondaryAirportsLayer = L.layerGroup().addTo(map);
-        let markersIndustriesLayer = L.layerGroup().addTo(map);
+        let markersAirbusLayer = L.layerGroup();
+        let markersMainAirportsLayer = L.layerGroup();
+        let markersSecondaryAirportsLayer = L.layerGroup();
+        let markersIndustriesLayer = L.layerGroup();
 
         // Fonction pour charger les marqueurs depuis le CSV
         async function chargerMarqueurs() {
