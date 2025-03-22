@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carte avec marqueurs</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -28,12 +29,23 @@
             background: white;
             border: 1px solid #ccc;
         }
-        #toggleSections {
-            margin-top: 10px;
-        }
-        button, input[type="checkbox"] {
+        .toggle-button {
+            background: #007BFF;
+            color: white;
+            padding: 10px;
+            border: none;
+            cursor: pointer;
             width: 100%;
             margin-top: 5px;
+        }
+        .toggle-button:hover {
+            background: #0056b3;
+        }
+        .category {
+            margin-top: 10px;
+        }
+        .category label {
+            display: block;
         }
     </style>
 </head>
@@ -41,88 +53,71 @@
     <div id="sidebar">
         <h2>Sélection des aéroports</h2>
         <div class="info-box">
-            Départ: <span id="departure">Non sélectionné</span>
+            Départ: <span id="departure" class="clickable">Non sélectionné</span>
+            <input type="text" id="departureInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <div class="info-box">
-            Arrivée: <span id="arrival">Non sélectionné</span>
+            Arrivée: <span id="arrival" class="clickable">Non sélectionné</span>
+            <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
-        <button id="generateLinkButton">Générer le plan de vol</button>
-
-        <h3>Afficher les marqueurs</h3>
-        <button id="toggleAirbus">Airbus</button>
-        <button id="togglePrincipaux">Aéroports Principaux</button>
-        <button id="toggleSecondaires">Aéroports Secondaires</button>
-
-        <h3>Industries</h3>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Viande"> Viande</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Céréales"> Céréales</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Farine"> Farine</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Compléments"> Compléments</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Plastique"> Plastique</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Usine"> Usine</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Dépôts"> Dépôts</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Points de vente"> Points de vente</label>
-        <label><input type="checkbox" class="toggleIndustry" data-category="Sirop"> Sirop d'érable</label>
+        <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
+        <div style="margin-top: 15px;"></div>
+        <button id="toggleAirbusButton" class="toggle-button">Airbus</button>
+        <button id="togglePrincipauxButton" class="toggle-button">Aéroports principaux</button>
+        <button id="toggleSecondairesButton" class="toggle-button">Aéroports secondaires</button>
+        <button id="toggleIndustriesButton" class="toggle-button">Industries</button>
+        <div class="category" id="industryFilters" style="display: none;">
+            <label><input type="checkbox" data-category="Viande"> Viande</label>
+            <label><input type="checkbox" data-category="Céréal"> Céréal</label>
+            <label><input type="checkbox" data-category="Farine"> Farine</label>
+            <label><input type="checkbox" data-category="Compléments"> Compléments</label>
+            <label><input type="checkbox" data-category="Plastique"> Plastique</label>
+            <label><input type="checkbox" data-category="Usine"> Usine</label>
+            <label><input type="checkbox" data-category="Dépots"> Dépots</label>
+            <label><input type="checkbox" data-category="Points de vente"> Points de vente</label>
+            <label><input type="checkbox" data-category="Sirop d'érable"> Sirop d'érable</label>
+        </div>
     </div>
-
     <div id="map"></div>
-
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
     <script>
         const map = L.map('map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
-        // URLs des Google Sheets
-        const sheetURL1 = 'URL_DU_PREMIER_GS';
-        const sheetURL2 = 'URL_DU_DEUXIEME_GS';
-
-        // Création des groupes de marqueurs
         const layers = {
             "Airbus": L.layerGroup().addTo(map),
-            "Aéroports Principaux": L.layerGroup().addTo(map),
-            "Aéroports Secondaires": L.layerGroup().addTo(map),
-            "Viande": L.layerGroup().addTo(map),
-            "Céréales": L.layerGroup().addTo(map),
-            "Farine": L.layerGroup().addTo(map),
-            "Compléments": L.layerGroup().addTo(map),
-            "Plastique": L.layerGroup().addTo(map),
-            "Usine": L.layerGroup().addTo(map),
-            "Dépôts": L.layerGroup().addTo(map),
-            "Points de vente": L.layerGroup().addTo(map),
-            "Sirop d'érable": L.layerGroup().addTo(map)
+            "Aéroports principaux": L.layerGroup(),
+            "Aéroports secondaires": L.layerGroup(),
+            "Industries": L.layerGroup()
+        };
+        
+        const industryLayers = {
+            "Viande": L.layerGroup(),
+            "Céréal": L.layerGroup(),
+            "Farine": L.layerGroup(),
+            "Compléments": L.layerGroup(),
+            "Plastique": L.layerGroup(),
+            "Usine": L.layerGroup(),
+            "Dépots": L.layerGroup(),
+            "Points de vente": L.layerGroup(),
+            "Sirop d'érable": L.layerGroup()
         };
 
-        // Chargement des données
-        async function chargerMarqueurs() {
-            await fetchMarkers(sheetURL1, "Airbus", 1, 17);
-            await fetchMarkers(sheetURL1, "Aéroports Principaux", 18, 498);
-            await fetchMarkers(sheetURL2, "Aéroports Secondaires", 2, 4690);
-            await fetchMarkers(sheetURL2, "Viande", 4691, 4695);
-            await fetchMarkers(sheetURL2, "Céréales", 4696, 4698);
-            await fetchMarkers(sheetURL2, "Farine", 4699, 4701);
-            await fetchMarkers(sheetURL2, "Compléments", 4702, 4704);
-            await fetchMarkers(sheetURL2, "Plastique", 4705, 4707);
-            await fetchMarkers(sheetURL2, "Usine", 4708, 4710);
-            await fetchMarkers(sheetURL2, "Dépôts", 4711, 4712);
-            await fetchMarkers(sheetURL2, "Points de vente", 4713, 4716);
-            await fetchMarkers(sheetURL2, "Sirop d'érable", 4717, 4724);
-        }
-
-        async function fetchMarkers(url, category, start, end) {
-            const response = await fetch(url);
+        async function chargerMarqueurs(sheetURL, category, rangeStart, rangeEnd, infoColumns = [4, 5, 6]) {
+            const response = await fetch(sheetURL);
             const text = await response.text();
-            const rows = text.split('\n').slice(start - 1, end);
-
+            const rows = text.split('\n').slice(rangeStart, rangeEnd);
+            
+            layers[category].clearLayers();
             rows.forEach(row => {
                 const cols = row.split(',');
+                const lat = parseFloat(cols[1].trim().replace(',', '.'));
+                const lng = parseFloat(cols[2].trim().replace(',', '.'));
                 const name = cols[0].trim();
-                const lat = parseFloat(cols[1].replace(',', '.'));
-                const lng = parseFloat(cols[2].replace(',', '.'));
-                const info = `${cols[4]}<br>${cols[5]}<br>${cols[6]}`;
-
+                const info = infoColumns.map(i => cols[i] ? cols[i].trim() : '').join(' ');
+                
                 if (!isNaN(lat) && !isNaN(lng)) {
                     const marker = L.marker([lat, lng])
                         .bindPopup(`<strong>${name}</strong><br>${info}`);
@@ -131,14 +126,17 @@
             });
         }
 
-        chargerMarqueurs();
+        document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
+            document.getElementById('industryFilters').style.display = 
+                document.getElementById('industryFilters').style.display === 'none' ? 'block' : 'none';
+        });
 
-        document.querySelectorAll('.toggleIndustry').forEach(checkbox => {
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 if (this.checked) {
-                    map.addLayer(layers[this.dataset.category]);
+                    industryLayers[this.dataset.category].addTo(map);
                 } else {
-                    map.removeLayer(layers[this.dataset.category]);
+                    map.removeLayer(industryLayers[this.dataset.category]);
                 }
             });
         });
