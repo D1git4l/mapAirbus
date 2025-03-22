@@ -7,119 +7,106 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css">
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 0; padding: 0; }
-        #map { width: 100%; height: 100vh; }  /* Hauteur de la carte ajustée à 100vh */
-        #toggleMarkersButton {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; display: flex; }
+        #sidebar {
+            width: 250px;
+            background: #f4f4f4;
             padding: 10px;
-            font-size: 16px;
-            cursor: pointer;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
         }
-        #toggleMarkersButton:hover {
-            background-color: #0056b3;
+        #map { flex-grow: 1; height: 100vh; }
+        .info-box { margin-bottom: 10px; padding: 10px; background: white; border: 1px solid #ccc; }
+        #generateLinkButton, #toggleMarkersButton {
+            background: #007BFF; color: white; padding: 10px; border: none; cursor: pointer; width: 100%; margin-top: 5px;
+        }
+        #toggleMarkersButton:hover, #generateLinkButton:hover {
+            background: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>Carte avec marqueurs d'aéroports</h1>
-    <button id="toggleMarkersButton">Aéroports principaux</button>
+    <div id="sidebar">
+        <h2>Sélection des aéroports</h2>
+        <div class="info-box">Départ: <span id="departure">Non sélectionné</span></div>
+        <div class="info-box">Arrivée: <span id="arrival">Non sélectionné</span></div>
+        <button id="toggleMarkersButton">Aéroports principaux</button>
+        <button id="generateLinkButton">Générer le plan de vol</button>
+    </div>
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.js"></script>
-
     <script>
         const map = L.map('map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributeurs'
+            attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
-        
-        // Groupe de calques pour les marqueurs
-        let markersLayer = L.layerGroup().addTo(map);  // Marqueurs des lignes 1 à 17
-        let markersSupplementaireLayer = L.layerGroup().addTo(map);  // Marqueurs des lignes 18 à 500
-        let markersSupplementaireVisible = false;  // Les marqueurs supplémentaires sont cachés par défaut
+        let departure = '';
+        let arrival = '';
+        let markersLayer = L.layerGroup().addTo(map);
+        let markersSupplementaireLayer = L.layerGroup().addTo(map);
+        let markersSupplementaireVisible = false;
 
-        // Fonction pour charger et afficher les marqueurs
         async function chargerMarqueurs() {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1); // Ignore la première ligne (en-têtes)
-
-                // Effacer les marqueurs existants
+                const lignes = texteCSV.split('\n').slice(1);
                 markersLayer.clearLayers();
                 markersSupplementaireLayer.clearLayers();
 
-                // Charger et afficher les lignes 1 à 17 (aéroports principaux) : Toujours affichés
-                const lignesPrincipales = lignes.slice(0, 17);  // Les 17 premières lignes
-                lignesPrincipales.forEach(ligne => {
+                lignes.forEach((ligne, index) => {
                     const colonnes = ligne.split(',');
-                    if (colonnes.length >= 4) {
+                    if (colonnes.length >= 5) {
                         const nom = colonnes[0].trim();
                         const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
                         const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
-                        const iconeUrl = colonnes[3].trim();
+                        const oaci = colonnes[4]?.trim();
 
                         if (!isNaN(lat) && !isNaN(lng)) {
-                            const iconePersonnalisee = L.icon({
-                                iconUrl: iconeUrl,
-                                iconSize: [50, 50],
-                                iconAnchor: [16, 32],
-                                popupAnchor: [0, -32]
-                            });
+                            const marker = L.marker([lat, lng]).bindPopup(`<strong>${nom}</strong><br>${oaci}`);
+                            marker.on('click', () => selectAirport(nom, oaci));
 
-                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersLayer.addLayer(marker);  // Marqueurs des lignes 1 à 17 ajoutés au groupe principal
+                            if (index < 17) {
+                                markersLayer.addLayer(marker);
+                            } else if (markersSupplementaireVisible) {
+                                markersSupplementaireLayer.addLayer(marker);
+                            }
                         }
                     }
                 });
-
-                // Charger et afficher les lignes 18 à 500 (aéroports supplémentaires) uniquement si visibles
-                if (markersSupplementaireVisible) {
-                    const lignesSupplementaires = lignes.slice(17, 500);  // De la ligne 18 à la 500ème
-                    lignesSupplementaires.forEach((ligne, index) => {
-                        const colonnes = ligne.split(',');
-                        if (colonnes.length >= 4) {
-                            const nom = colonnes[0].trim();
-                            let lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                            let lng = parseFloat(colonnes[2].trim().replace(',', '.'));
-                            const iconeUrl = colonnes[3].trim();
-
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                // Appliquer un décalage aux marqueurs des lignes 18 à 500
-                                const offset = 0.001 * (index % 2 === 0 ? 1 : -1); // Décalage léger (variable)
-                                lat += offset;
-                                lng += offset;
-
-                                const iconePersonnalisee = L.icon({
-                                    iconUrl: iconeUrl,
-                                    iconSize: [25, 25],
-                                    iconAnchor: [16, 32],
-                                    popupAnchor: [0, -32]
-                                });
-
-                                const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                    .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                                markersSupplementaireLayer.addLayer(marker);  // Marqueurs des lignes 18 à 500 ajoutés au groupe séparé
-                            }
-                        }
-                    });
-                }
-
             } catch (erreur) {
                 console.error('Erreur lors du chargement des données CSV :', erreur);
             }
         }
 
-        // Ajout de l'outil de mesure de distance en milles nautiques
+        function selectAirport(name, oaci) {
+            if (!departure) {
+                departure = oaci;
+                document.getElementById('departure').textContent = name;
+            } else if (!arrival) {
+                arrival = oaci;
+                document.getElementById('arrival').textContent = name;
+            }
+        }
+
+        function toggleMarkers() {
+            markersSupplementaireVisible = !markersSupplementaireVisible;
+            chargerMarqueurs();
+        }
+
+        document.getElementById('toggleMarkersButton').addEventListener('click', toggleMarkers);
+        document.getElementById('generateLinkButton').addEventListener('click', () => {
+            if (departure && arrival) {
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
+                window.open(simbriefURL, '_blank');
+            } else {
+                alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
+            }
+        });
+
         const measureControl = new L.Control.Measure({
             primaryLengthUnit: "nauticalMiles",
             secondaryLengthUnit: "kilometers",
@@ -129,16 +116,8 @@
         });
         map.addControl(measureControl);
 
-        // Fonction pour afficher/masquer les marqueurs supplémentaires (lignes 18 à 500)
-        function toggleMarkers() {
-            markersSupplementaireVisible = !markersSupplementaireVisible;
-            chargerMarqueurs();  // Recharger les marqueurs après avoir changé la visibilité
-        }
-
-        // Ajouter un écouteur d'événements au bouton pour afficher/masquer les marqueurs supplémentaires
-        document.getElementById('toggleMarkersButton').addEventListener('click', toggleMarkers);
-
-        chargerMarqueurs();  // Charger initialement les marqueurs principaux (lignes 1 à 17)
+        chargerMarqueurs();
     </script>
 </body>
 </html>
+
