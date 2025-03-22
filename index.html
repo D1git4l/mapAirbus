@@ -134,7 +134,7 @@
                             });
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`${infoE} ${infoF} ${infoG}`); // Affichage direct des valeurs sans labels
+                                .bindPopup(`<strong>${nom}</strong><br>${infoE} ${infoF} ${infoG}`); // Affichage du nom et des informations
                             markersAirbusLayer.addLayer(marker);
                         }
                     }
