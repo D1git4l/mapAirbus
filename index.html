@@ -29,7 +29,7 @@
             background: white;
             border: 1px solid #ccc;
         }
-        #generateLinkButton, #toggleMarkersButton {
+        #generateLinkButton, #toggleMarkersButton, #toggleMediumAirportsButton, #toggleIndustryMarkersButton {
             background: #007BFF;
             color: white;
             padding: 10px;
@@ -38,7 +38,7 @@
             width: 100%;
             margin-top: 5px;
         }
-        #toggleMarkersButton:hover, #generateLinkButton:hover {
+        #toggleMarkersButton:hover, #generateLinkButton:hover, #toggleMediumAirportsButton:hover, #toggleIndustryMarkersButton:hover {
             background: #0056b3;
         }
         input[type="text"] {
@@ -62,6 +62,8 @@
         </div>
         <button id="generateLinkButton">Générer le plan de vol</button>
         <button id="toggleMarkersButton">Aéroports principaux</button>
+        <button id="toggleMediumAirportsButton">Aéroports moyens</button>
+        <button id="toggleIndustryMarkersButton">Marqueurs industriels</button>
     </div>
 
     <!-- Carte -->
@@ -76,24 +78,31 @@
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
-        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
+        const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
+        const sheetURL2_1 = 'https://docs.google.com/spreadsheets/d/1wi2IqCmqO0XTXk642Zt4vRCnO-GSZzAeBkqDaVN2L3o/edit?gid=78117314&single=true&output=csv';
+        const sheetURL2_2 = 'https://docs.google.com/spreadsheets/d/1wi2IqCmqO0XTXk642Zt4vRCnO-GSZzAeBkqDaVN2L3o/edit?gid=1204191404&single=true&output=csv';
 
         let markersLayer = L.layerGroup().addTo(map);
-        let markersSupplementaireLayer = L.layerGroup().addTo(map);
+        let mediumAirportsLayer = L.layerGroup().addTo(map);
+        let industryMarkersLayer = L.layerGroup().addTo(map);
+
         let markersSupplementaireVisible = false;
+        let mediumAirportsVisible = false;
+        let industryMarkersVisible = false;
 
         let activeInput = null; // Pour savoir quelle case (départ ou arrivée) est active
 
         async function chargerMarqueurs() {
             try {
-                const reponse = await fetch(sheetURL);
-                const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1);
+                const reponse1 = await fetch(sheetURL1);
+                const texteCSV1 = await reponse1.text();
+                const lignes1 = texteCSV1.split('\n').slice(1);
 
                 markersLayer.clearLayers();
-                markersSupplementaireLayer.clearLayers();
+                mediumAirportsLayer.clearLayers();
+                industryMarkersLayer.clearLayers();
 
-                const lignesPrincipales = lignes.slice(0, 17);
+                const lignesPrincipales = lignes1.slice(0, 17);
                 lignesPrincipales.forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
@@ -119,20 +128,48 @@
                 });
 
                 if (markersSupplementaireVisible) {
-                    const lignesSupplementaires = lignes.slice(17, 500);
-                    lignesSupplementaires.forEach((ligne, index) => {
+                    const reponse2_1 = await fetch(sheetURL2_1);
+                    const texteCSV2_1 = await reponse2_1.text();
+                    const lignes2_1 = texteCSV2_1.split('\n').slice(1);
+
+                    lignes2_1.forEach(ligne => {
                         const colonnes = ligne.split(',');
                         if (colonnes.length >= 4) {
                             const nom = colonnes[0].trim();
-                            let lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                            let lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                            const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                            const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
                             const iconeUrl = colonnes[3].trim();
 
                             if (!isNaN(lat) && !isNaN(lng)) {
-                                const offset = 0.001 * (index % 2 === 0 ? 1 : -1);
-                                lat += offset;
-                                lng += offset;
+                                const iconePersonnalisee = L.icon({
+                                    iconUrl: iconeUrl,
+                                    iconSize: [50, 50],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -32]
+                                });
 
+                                const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                    .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                                mediumAirportsLayer.addLayer(marker);
+                            }
+                        }
+                    });
+                }
+
+                if (industryMarkersVisible) {
+                    const reponse2_2 = await fetch(sheetURL2_2);
+                    const texteCSV2_2 = await reponse2_2.text();
+                    const lignes2_2 = texteCSV2_2.split('\n').slice(1);
+
+                    lignes2_2.forEach(ligne => {
+                        const colonnes = ligne.split(',');
+                        if (colonnes.length >= 4) {
+                            const nom = colonnes[0].trim();
+                            const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                            const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                            const iconeUrl = colonnes[3].trim();
+
+                            if (!isNaN(lat) && !isNaN(lng)) {
                                 const iconePersonnalisee = L.icon({
                                     iconUrl: iconeUrl,
                                     iconSize: [25, 25],
@@ -142,7 +179,7 @@
 
                                 const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                     .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                                markersSupplementaireLayer.addLayer(marker);
+                                industryMarkersLayer.addLayer(marker);
                             }
                         }
                     });
@@ -212,6 +249,16 @@
 
         document.getElementById('toggleMarkersButton').addEventListener('click', () => {
             markersSupplementaireVisible = !markersSupplementaireVisible;
+            chargerMarqueurs();
+        });
+
+        document.getElementById('toggleMediumAirportsButton').addEventListener('click', () => {
+            mediumAirportsVisible = !mediumAirportsVisible;
+            chargerMarqueurs();
+        });
+
+        document.getElementById('toggleIndustryMarkersButton').addEventListener('click', () => {
+            industryMarkersVisible = !industryMarkersVisible;
             chargerMarqueurs();
         });
 
