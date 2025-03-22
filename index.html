@@ -41,14 +41,25 @@
         #toggleMarkersButton:hover, #generateLinkButton:hover {
             background: #0056b3;
         }
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
     <!-- Colonne de gauche -->
     <div id="sidebar">
         <h2>Sélection des aéroports</h2>
-        <div class="info-box">Départ: <span id="departure">Non sélectionné</span></div>
-        <div class="info-box">Arrivée: <span id="arrival">Non sélectionné</span></div>
+        <div class="info-box">
+            Départ: <span id="departure" class="clickable">Non sélectionné</span>
+            <input type="text" id="departureInput" style="display:none" placeholder="Entrez un aéroport">
+        </div>
+        <div class="info-box">
+            Arrivée: <span id="arrival" class="clickable">Non sélectionné</span>
+            <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
+        </div>
         <button id="toggleMarkersButton">Aéroports principaux</button>
         <button id="generateLinkButton">Générer le plan de vol</button>
     </div>
@@ -67,28 +78,25 @@
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
 
-        // Groupe de calques pour les marqueurs
-        let markersLayer = L.layerGroup().addTo(map);  // Marqueurs des lignes 1 à 17
-        let markersSupplementaireLayer = L.layerGroup().addTo(map);  // Marqueurs des lignes 18 à 500
-        let markersSupplementaireVisible = false;  // Les marqueurs supplémentaires sont cachés par défaut
+        let markersLayer = L.layerGroup().addTo(map);
+        let markersSupplementaireLayer = L.layerGroup().addTo(map);
+        let markersSupplementaireVisible = false;
 
-        // Variables pour départ et arrivée
+        let activeInput = null; // Pour savoir quelle case (départ ou arrivée) est active
+
         let departure = '';
         let arrival = '';
 
-        // Fonction pour charger et afficher les marqueurs
         async function chargerMarqueurs() {
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1); // Ignore la première ligne (en-têtes)
+                const lignes = texteCSV.split('\n').slice(1);
 
-                // Effacer les marqueurs existants
                 markersLayer.clearLayers();
                 markersSupplementaireLayer.clearLayers();
 
-                // Charger et afficher les lignes 1 à 17 (aéroports principaux) : Toujours affichés
-                const lignesPrincipales = lignes.slice(0, 17);  // Les 17 premières lignes
+                const lignesPrincipales = lignes.slice(0, 17);
                 lignesPrincipales.forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
@@ -107,15 +115,14 @@
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                 .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            marker.on('click', () => selectAirport(nom, colonnes[4]?.trim())); // Sélectionner l'aéroport
-                            markersLayer.addLayer(marker);  // Marqueurs des lignes 1 à 17 ajoutés au groupe principal
+                            marker.on('click', () => setAirport(nom, colonnes[4]?.trim())); // Modifier en cliquant
+                            markersLayer.addLayer(marker);
                         }
                     }
                 });
 
-                // Charger et afficher les lignes 18 à 500 (aéroports supplémentaires) uniquement si visibles
                 if (markersSupplementaireVisible) {
-                    const lignesSupplementaires = lignes.slice(17, 500);  // De la ligne 18 à la 500ème
+                    const lignesSupplementaires = lignes.slice(17, 500);
                     lignesSupplementaires.forEach((ligne, index) => {
                         const colonnes = ligne.split(',');
                         if (colonnes.length >= 4) {
@@ -138,7 +145,7 @@
 
                                 const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                     .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                                markersSupplementaireLayer.addLayer(marker);  // Marqueurs des lignes 18 à 500 ajoutés au groupe séparé
+                                markersSupplementaireLayer.addLayer(marker);
                             }
                         }
                     });
@@ -149,24 +156,60 @@
             }
         }
 
-        // Fonction pour gérer la sélection des aéroports
-        function selectAirport(name, oaci) {
-            if (!departure) {
+        // Fonction pour définir l'aéroport actif (Départ ou Arrivée)
+        function setAirport(name, oaci) {
+            if (activeInput === 'departure') {
                 departure = oaci;
                 document.getElementById('departure').textContent = name;
-            } else if (!arrival) {
+            } else if (activeInput === 'arrival') {
                 arrival = oaci;
                 document.getElementById('arrival').textContent = name;
             }
+            hideInput(); // Cacher l'input après la sélection
         }
 
-        // Fonction pour afficher/masquer les marqueurs supplémentaires (lignes 18 à 500)
-        function toggleMarkers() {
+        // Afficher l'input pour modifier manuellement ou sélection automatique via un clic
+        function showInput(inputType) {
+            activeInput = inputType;
+            if (inputType === 'departure') {
+                document.getElementById('departureInput').style.display = 'block';
+                document.getElementById('departure').style.display = 'none';
+            } else if (inputType === 'arrival') {
+                document.getElementById('arrivalInput').style.display = 'block';
+                document.getElementById('arrival').style.display = 'none';
+            }
+        }
+
+        // Masquer l'input lorsque la saisie est terminée
+        function hideInput() {
+            document.getElementById('departureInput').style.display = 'none';
+            document.getElementById('arrivalInput').style.display = 'none';
+            document.getElementById('departure').style.display = 'inline';
+            document.getElementById('arrival').style.display = 'inline';
+        }
+
+        // Ajouter un événement pour la saisie manuelle des aéroports
+        document.getElementById('departure').addEventListener('click', () => showInput('departure'));
+        document.getElementById('arrival').addEventListener('click', () => showInput('arrival'));
+
+        // Ajouter la saisie manuelle
+        document.getElementById('departureInput').addEventListener('change', (e) => {
+            departure = e.target.value;
+            document.getElementById('departure').textContent = departure;
+            hideInput();
+        });
+
+        document.getElementById('arrivalInput').addEventListener('change', (e) => {
+            arrival = e.target.value;
+            document.getElementById('arrival').textContent = arrival;
+            hideInput();
+        });
+
+        document.getElementById('toggleMarkersButton').addEventListener('click', () => {
             markersSupplementaireVisible = !markersSupplementaireVisible;
-            chargerMarqueurs();  // Recharger les marqueurs après avoir changé la visibilité
-        }
+            chargerMarqueurs();
+        });
 
-        // Générer le lien pour SimBrief
         document.getElementById('generateLinkButton').addEventListener('click', () => {
             if (departure && arrival) {
                 const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
@@ -176,7 +219,6 @@
             }
         });
 
-        // Ajout de l'outil de mesure de distance
         const measureControl = new L.Control.Measure({
             primaryLengthUnit: "nauticalMiles",
             secondaryLengthUnit: "kilometers",
@@ -186,10 +228,7 @@
         });
         map.addControl(measureControl);
 
-        // Ajouter un écouteur d'événements au bouton pour afficher/masquer les marqueurs supplémentaires
-        document.getElementById('toggleMarkersButton').addEventListener('click', toggleMarkers);
-
-        chargerMarqueurs();  // Charger initialement les marqueurs principaux (lignes 1 à 17)
+        chargerMarqueurs();
     </script>
 </body>
 </html>
