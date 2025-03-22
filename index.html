@@ -46,9 +46,6 @@
             padding: 5px;
             margin-top: 5px;
         }
-        .checkbox-container {
-            margin-top: 20px;
-        }
     </style>
 </head>
 <body>
@@ -64,21 +61,6 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <button id="generateLinkButton">Générer le plan de vol</button>
-        
-        <!-- Liste des catégories Industrie -->
-        <h3>Marqueurs Industrie</h3>
-        <div class="checkbox-container">
-            <input type="checkbox" id="viande" /> Viande<br>
-            <input type="checkbox" id="cereal" /> Céréal<br>
-            <input type="checkbox" id="farine" /> Farine<br>
-            <input type="checkbox" id="complement" /> Complément<br>
-            <input type="checkbox" id="plastique" /> Plastique<br>
-            <input type="checkbox" id="usine" /> Usine<br>
-            <input type="checkbox" id="depot" /> Dépot<br>
-            <input type="checkbox" id="hub" /> Hub<br>
-            <input type="checkbox" id="sirop" /> Sirop<br>
-        </div>
-
         <button id="toggleMarkersButton">Aéroports principaux</button>
     </div>
 
@@ -94,11 +76,9 @@
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
-        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=78117314&single=true&output=csv';
-        const sheetIndustrieURL = 'https://docs.google.com/spreadsheets/d/1wi2IqCmqO0XTXk642Zt4vRCnO-GSZzAeBkqDaVN2L3o/edit?gid=1204191404&output=csv';
+        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
 
         let markersLayer = L.layerGroup().addTo(map);
-        let markersIndustrieLayer = L.layerGroup().addTo(map);
         let markersSupplementaireLayer = L.layerGroup().addTo(map);
         let markersSupplementaireVisible = false;
 
@@ -112,9 +92,7 @@
 
                 markersLayer.clearLayers();
                 markersSupplementaireLayer.clearLayers();
-                markersIndustrieLayer.clearLayers();
 
-                // Charger les marqueurs principaux (aéroports)
                 const lignesPrincipales = lignes.slice(0, 17);
                 lignesPrincipales.forEach(ligne => {
                     const colonnes = ligne.split(',');
@@ -134,70 +112,104 @@
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                 .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                            marker.on('click', () => setAirport(nom, colonnes[4]?.trim())); // Modifier en cliquant
                             markersLayer.addLayer(marker);
                         }
                     }
                 });
 
-                // Charger les marqueurs de la feuille Industrie
-                const reponseIndustrie = await fetch(sheetIndustrieURL);
-                const texteCSVIndustrie = await reponseIndustrie.text();
-                const lignesIndustrie = texteCSVIndustrie.split('\n').slice(1);
-                lignesIndustrie.forEach(ligne => {
-                    const colonnes = ligne.split(',');
-                    if (colonnes.length >= 3) {
-                        const nom = colonnes[0].trim();
-                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                if (markersSupplementaireVisible) {
+                    const lignesSupplementaires = lignes.slice(17, 500);
+                    lignesSupplementaires.forEach((ligne, index) => {
+                        const colonnes = ligne.split(',');
+                        if (colonnes.length >= 4) {
+                            const nom = colonnes[0].trim();
+                            let lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                            let lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                            const iconeUrl = colonnes[3].trim();
 
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const marker = L.marker([lat, lng])
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersIndustrieLayer.addLayer(marker);
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                const offset = 0.001 * (index % 2 === 0 ? 1 : -1);
+                                lat += offset;
+                                lng += offset;
+
+                                const iconePersonnalisee = L.icon({
+                                    iconUrl: iconeUrl,
+                                    iconSize: [25, 25],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -32]
+                                });
+
+                                const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                    .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                                markersSupplementaireLayer.addLayer(marker);
+                            }
                         }
-                    }
-                });
+                    });
+                }
+
             } catch (erreur) {
                 console.error('Erreur lors du chargement des données CSV :', erreur);
             }
         }
 
-        // Charger les marqueurs lors de l'initialisation
-        chargerMarqueurs();
-
-        // Fonction pour afficher/masquer les marqueurs Industrie en fonction des cases à cocher
-        document.getElementById('viande').addEventListener('change', () => toggleIndustrieMarkers('viande', [2, 6]));
-        document.getElementById('cereal').addEventListener('change', () => toggleIndustrieMarkers('cereal', [7, 9]));
-        document.getElementById('farine').addEventListener('change', () => toggleIndustrieMarkers('farine', [10, 12]));
-        document.getElementById('complement').addEventListener('change', () => toggleIndustrieMarkers('complement', [13, 15]));
-        document.getElementById('plastique').addEventListener('change', () => toggleIndustrieMarkers('plastique', [16, 18]));
-        document.getElementById('usine').addEventListener('change', () => toggleIndustrieMarkers('usine', [19, 21]));
-        document.getElementById('depot').addEventListener('change', () => toggleIndustrieMarkers('depot', [22, 23]));
-        document.getElementById('hub').addEventListener('change', () => toggleIndustrieMarkers('hub', [24, 27]));
-        document.getElementById('sirop').addEventListener('change', () => toggleIndustrieMarkers('sirop', [28, 35]));
-
-        // Fonction pour afficher/masquer les marqueurs d'Industrie en fonction des lignes définies
-        function toggleIndustrieMarkers(category, range) {
-            markersIndustrieLayer.clearLayers();
-            const reponseIndustrie = fetch(sheetIndustrieURL)
-                .then(res => res.text())
-                .then(text => {
-                    const rows = text.split('\n').slice(1);
-                    rows.slice(range[0], range[1] + 1).forEach(row => {
-                        const columns = row.split(',');
-                        if (columns.length >= 3) {
-                            const nom = columns[0].trim();
-                            const lat = parseFloat(columns[1].trim().replace(',', '.'));
-                            const lng = parseFloat(columns[2].trim().replace(',', '.'));
-                            const marker = L.marker([lat, lng])
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersIndustrieLayer.addLayer(marker);
-                        }
-                    });
-                });
+        // Fonction pour définir l'aéroport actif (Départ ou Arrivée)
+        function setAirport(name, oaci) {
+            if (activeInput === 'departure') {
+                document.getElementById('departure').textContent = name;
+            } else if (activeInput === 'arrival') {
+                document.getElementById('arrival').textContent = name;
+            }
+            hideInput(); // Cacher l'input après la sélection
         }
 
-        // Fonction pour afficher/masquer les marqueurs supplémentaires
+        // Afficher l'input pour modifier manuellement ou sélection automatique via un clic
+        function showInput(inputType) {
+            activeInput = inputType;
+            if (inputType === 'departure') {
+                document.getElementById('departureInput').style.display = 'block';
+                document.getElementById('departure').style.display = 'none';
+            } else if (inputType === 'arrival') {
+                document.getElementById('arrivalInput').style.display = 'block';
+                document.getElementById('arrival').style.display = 'none';
+            }
+        }
+
+        // Masquer l'input lorsque la saisie est terminée
+        function hideInput() {
+            document.getElementById('departureInput').style.display = 'none';
+            document.getElementById('arrivalInput').style.display = 'none';
+            document.getElementById('departure').style.display = 'inline';
+            document.getElementById('arrival').style.display = 'inline';
+        }
+
+        // Ajouter un événement pour la saisie manuelle des aéroports
+        document.getElementById('departure').addEventListener('click', () => showInput('departure'));
+        document.getElementById('arrival').addEventListener('click', () => showInput('arrival'));
+
+        // Ajouter la saisie manuelle
+        document.getElementById('departureInput').addEventListener('change', (e) => {
+            document.getElementById('departure').textContent = e.target.value;
+            hideInput();
+        });
+
+        document.getElementById('arrivalInput').addEventListener('change', (e) => {
+            document.getElementById('arrival').textContent = e.target.value;
+            hideInput();
+        });
+
+        document.getElementById('generateLinkButton').addEventListener('click', () => {
+            const departureText = document.getElementById('departure').textContent;
+            const arrivalText = document.getElementById('arrival').textContent;
+
+            if (departureText !== 'Non sélectionné' && arrivalText !== 'Non sélectionné') {
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departureText}&dest=${arrivalText}`;
+                window.open(simbriefURL, '_blank');
+            } else {
+                alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
+            }
+        });
+
         document.getElementById('toggleMarkersButton').addEventListener('click', () => {
             markersSupplementaireVisible = !markersSupplementaireVisible;
             chargerMarqueurs();
@@ -211,6 +223,8 @@
             position: "topleft"
         });
         map.addControl(measureControl);
+
+        chargerMarqueurs();
     </script>
 </body>
 </html>
