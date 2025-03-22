@@ -106,25 +106,37 @@
         };
 
         async function chargerMarqueurs(sheetURL, category, rangeStart, rangeEnd, infoColumns = [4, 5, 6]) {
-            const response = await fetch(sheetURL);
-            const text = await response.text();
-            const rows = text.split('\n').slice(rangeStart, rangeEnd);
-            
-            layers[category].clearLayers();
-            rows.forEach(row => {
-                const cols = row.split(',');
-                const lat = parseFloat(cols[1].trim().replace(',', '.'));
-                const lng = parseFloat(cols[2].trim().replace(',', '.'));
-                const name = cols[0].trim();
-                const info = infoColumns.map(i => cols[i] ? cols[i].trim() : '').join(' ');
-                
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    const marker = L.marker([lat, lng])
-                        .bindPopup(`<strong>${name}</strong><br>${info}`);
-                    layers[category].addLayer(marker);
-                }
-            });
+    const response = await fetch(sheetURL);
+    if (!response.ok) {
+        console.error("Erreur lors du chargement du fichier CSV");
+        return;
+    }
+    const text = await response.text();
+    const rows = text.split('\n').slice(rangeStart, rangeEnd);
+    
+    console.log("Rows chargées : ", rows); // Vérifie que les lignes sont récupérées
+
+    layers[category].clearLayers();  // Vider les anciennes couches avant d'ajouter de nouvelles
+
+    rows.forEach(row => {
+        const cols = row.split(',');
+        const lat = parseFloat(cols[1].trim().replace(',', '.'));
+        const lng = parseFloat(cols[2].trim().replace(',', '.'));
+        const name = cols[0].trim();
+        const info = infoColumns.map(i => cols[i] ? cols[i].trim() : '').join(' ');
+
+        console.log(`Lat: ${lat}, Lng: ${lng}, Name: ${name}, Info: ${info}`);  // Vérifie les données
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+            const marker = L.marker([lat, lng])
+                .bindPopup(`<strong>${name}</strong><br>${info}`);
+            layers[category].addLayer(marker);
         }
+    });
+}
+
+// Appel pour tester le chargement des marqueurs
+chargerMarqueurs('URL_DU_CSV', 'Aéroports principaux', 0, 10);
 
         // Afficher/Masquer les filtres des industries
         document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
