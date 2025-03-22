@@ -49,6 +49,11 @@
             display: block;
             margin-bottom: 5px;
         }
+        .clickable {
+            cursor: pointer;
+            color: blue;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -64,9 +69,6 @@
         </div>
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
         
-        <h3>Afficher par mois</h3>
-        <div id="monthCheckboxes" class="checkbox-group"></div>
-
         <h3>Afficher par catégorie</h3>
         <div id="categoryCheckboxes" class="checkbox-group"></div>
     </div>
@@ -79,7 +81,7 @@
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
-        const layers = {}; // Chaque catégorie et mois sera un layer distinct
+        const layers = {}; // Chaque catégorie sera un layer distinct
         let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
 
         // URLs pour les fichiers CSV
@@ -132,26 +134,16 @@
             });
         }
 
-        // Fonction pour récupérer les mois et les catégories à partir du Sheet 2
-        async function chargerMoisEtCategories() {
+        // Fonction pour récupérer les catégories à partir du Sheet 2
+        async function chargerCategories() {
             const response = await fetch(sheetURL2);
             const text = await response.text();
             const rows = text.split('\n').slice(1); // Ignorer la première ligne
 
-            const months = new Set();
             const categories = new Set();
             rows.forEach(row => {
                 const cols = row.split(',');
-                if (cols[7]) months.add(cols[7].trim()); // Colonne H pour les mois
                 if (cols[0]) categories.add(cols[0].trim()); // Colonne A pour les catégories
-            });
-
-            // Afficher les mois sous forme de cases à cocher
-            const monthCheckboxes = document.getElementById('monthCheckboxes');
-            months.forEach(month => {
-                const label = document.createElement('label');
-                label.innerHTML = `<input type="checkbox" class="monthCheckbox" value="${month}"> ${month}`;
-                monthCheckboxes.appendChild(label);
             });
 
             // Afficher les catégories sous forme de cases à cocher
@@ -163,14 +155,14 @@
             });
         }
 
-        // Appeler la fonction pour charger les mois et catégories
-        chargerMoisEtCategories();
+        // Appeler la fonction pour charger les catégories
+        chargerCategories();
 
         // Charger les données pour les différentes catégories (exemples)
         chargerMarqueurs(sheetURL1, "Airbus", 1, 18); // Exemple pour charger les données Airbus
         chargerMarqueurs(sheetURL1, "Aéroports principaux", 18, 499); // Exemple pour charger les aéroports principaux
 
-        // Fonction pour afficher/masquer les layers selon la catégorie ou le mois
+        // Fonction pour afficher/masquer les layers selon la catégorie
         document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 const category = this.value;
@@ -199,12 +191,26 @@
         // Gérer la sélection de départ et d'arrivée
         document.getElementById('departure').addEventListener('click', () => {
             currentSelection = 'departure';
+            document.getElementById('departureInput').style.display = 'block';
+            document.getElementById('arrivalInput').style.display = 'none';
         });
         
         document.getElementById('arrival').addEventListener('click', () => {
             currentSelection = 'arrival';
+            document.getElementById('arrivalInput').style.display = 'block';
+            document.getElementById('departureInput').style.display = 'none';
         });
 
+        // Permettre à l'utilisateur de saisir manuellement les valeurs de départ et d'arrivée
+        document.getElementById('departureInput').addEventListener('blur', (event) => {
+            document.getElementById('departure').innerText = event.target.value;
+            document.getElementById('departureInput').style.display = 'none';
+        });
+
+        document.getElementById('arrivalInput').addEventListener('blur', (event) => {
+            document.getElementById('arrival').innerText = event.target.value;
+            document.getElementById('arrivalInput').style.display = 'none';
+        });
     </script>
 </body>
 </html>
