@@ -110,13 +110,20 @@
         const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
         // Fonction pour charger les marqueurs depuis les CSV
-        async function chargerMarqueurs(sheetURL, category, rangeStart, rangeEnd, infoColumns = [4, 5, 6]) {
+        async function chargerMarqueurs(sheetURL, category, rangeStart, rangeEnd, infoColumns = [4, 5, 6], referenceColumn = 7) {
             const response = await fetch(sheetURL);
             const text = await response.text();
             const rows = text.split('\n').slice(rangeStart, rangeEnd);
             
+            // Trier les données par la colonne de référence (colonne H - index 7)
+            const sortedRows = rows.sort((a, b) => {
+                const refA = a.split(',')[referenceColumn].trim();
+                const refB = b.split(',')[referenceColumn].trim();
+                return refA.localeCompare(refB);  // Trier par ordre alphabétique
+            });
+
             layers[category].clearLayers();
-            rows.forEach(row => {
+            sortedRows.forEach(row => {
                 const cols = row.split(',');
                 const lat = parseFloat(cols[1].trim().replace(',', '.'));
                 const lng = parseFloat(cols[2].trim().replace(',', '.'));
@@ -135,7 +142,7 @@
         chargerMarqueurs(sheetURL1, "Airbus", 1, 18); // Charger les données Airbus
         chargerMarqueurs(sheetURL1, "Aéroports principaux", 18, 499); // Charger les aéroports principaux
         chargerMarqueurs(sheetURL2, "Aéroports secondaires", 1, 4690); // Charger les aéroports secondaires
-        chargerMarqueurs(sheetURL2, "Industries", 4691, 4724); // Charger les industries
+        chargerMarqueurs(sheetURL2, "Industries", 4691, 4724, [4, 5, 6], 7); // Charger les industries, triées par la colonne H
 
         // Afficher/Masquer les filtres des industries
         document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
@@ -208,4 +215,3 @@
     </script>
 </body>
 </html>
-
