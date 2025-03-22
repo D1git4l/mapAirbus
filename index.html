@@ -136,7 +136,9 @@
             rows.forEach(row => {
                 const cols = row.split(',');
                 const category = cols[6].trim(); // Colonne G : catégorie
-                categories.add(category); // Ajouter la catégorie à l'ensemble
+                if (category) {  // Assurer que la catégorie n'est pas vide
+                    categories.add(category); // Ajouter la catégorie à l'ensemble
+                }
             });
 
             // Créer des cases à cocher pour chaque catégorie
@@ -247,4 +249,3 @@
     </script>
 </body>
 </html>
-
