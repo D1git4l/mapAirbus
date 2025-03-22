@@ -63,6 +63,9 @@
             padding: 5px;
             margin-top: 5px;
         }
+        .checkbox-container {
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -82,6 +85,19 @@
         <button id="toggleMainAirportsButton">Aéroports principaux</button>
         <button id="toggleSecondaryAirportsButton">Aéroports secondaires</button>
         <button id="toggleIndustriesButton">Industries</button>
+
+        <div class="checkbox-container" id="industriesCheckboxes" style="display:none">
+            <h3>Industries</h3>
+            <label><input type="checkbox" id="viandeCheckbox"> Viande</label><br>
+            <label><input type="checkbox" id="cerealCheckbox"> Céréal</label><br>
+            <label><input type="checkbox" id="farineCheckbox"> Farine</label><br>
+            <label><input type="checkbox" id="complementCheckbox"> Compléments</label><br>
+            <label><input type="checkbox" id="plastiqueCheckbox"> Plastique</label><br>
+            <label><input type="checkbox" id="usineCheckbox"> Usine</label><br>
+            <label><input type="checkbox" id="depotCheckbox"> Dépôts</label><br>
+            <label><input type="checkbox" id="pointsVenteCheckbox"> Points de vente</label><br>
+            <label><input type="checkbox" id="siropErableCheckbox"> Sirop d'érable</label><br>
+        </div>
     </div>
 
     <!-- Carte -->
@@ -100,99 +116,27 @@
         const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
         // Groupes de marqueurs
-        let markersAirbusLayer = L.layerGroup();
-        let markersMainAirportsLayer = L.layerGroup();
-        let markersSecondaryAirportsLayer = L.layerGroup();
         let markersIndustriesLayer = L.layerGroup();
+        let industryGroups = {
+            viande: L.layerGroup(),
+            cereal: L.layerGroup(),
+            farine: L.layerGroup(),
+            complement: L.layerGroup(),
+            plastique: L.layerGroup(),
+            usine: L.layerGroup(),
+            depot: L.layerGroup(),
+            pointsVente: L.layerGroup(),
+            siropErable: L.layerGroup()
+        };
 
         // Fonction pour charger les marqueurs depuis le CSV
         async function chargerMarqueurs() {
             try {
-                // Charger les marqueurs Airbus (lignes 1 à 17)
-                const reponse1 = await fetch(sheetURL1);
-                const texteCSV1 = await reponse1.text();
-                const lignes1 = texteCSV1.split('\n').slice(1);
-
-                // Charger les marqueurs Airbus (lignes 1 à 17)
-                lignes1.slice(0, 17).forEach(ligne => {
-                    const colonnes = ligne.split(',');
-                    if (colonnes.length >= 7) {
-                        const nom = colonnes[0].trim();
-                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
-                        const iconeUrl = colonnes[3].trim();
-                        const infoE = colonnes[4].trim();
-                        const infoF = colonnes[5].trim();
-                        const infoG = colonnes[6].trim();
-
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const iconePersonnalisee = L.icon({
-                                iconUrl: iconeUrl,
-                                iconSize: [50, 50],
-                                iconAnchor: [16, 32],
-                                popupAnchor: [0, -32]
-                            });
-
-                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>${infoE} ${infoF} ${infoG}`); // Affichage du nom et des informations
-                            markersAirbusLayer.addLayer(marker);
-                        }
-                    }
-                });
-
-                // Charger les marqueurs des aéroports principaux (lignes 18 à 498)
-                lignes1.slice(18, 499).forEach(ligne => {
-                    const colonnes = ligne.split(',');
-                    if (colonnes.length >= 4) {
-                        const nom = colonnes[0].trim();
-                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
-                        const iconeUrl = colonnes[3].trim();
-
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const iconePersonnalisee = L.icon({
-                                iconUrl: iconeUrl,
-                                iconSize: [50, 50],
-                                iconAnchor: [16, 32],
-                                popupAnchor: [0, -32]
-                            });
-
-                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersMainAirportsLayer.addLayer(marker);
-                        }
-                    }
-                });
-
-                // Charger les aéroports secondaires (lignes 2 à 4690 du deuxième CSV)
                 const reponse2 = await fetch(sheetURL2);
                 const texteCSV2 = await reponse2.text();
                 const lignes2 = texteCSV2.split('\n').slice(1);
 
-                lignes2.slice(1, 4690).forEach(ligne => {
-                    const colonnes = ligne.split(',');
-                    if (colonnes.length >= 4) {
-                        const nom = colonnes[0].trim();
-                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
-                        const iconeUrl = colonnes[3].trim();
-
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const iconePersonnalisee = L.icon({
-                                iconUrl: iconeUrl,
-                                iconSize: [50, 50],
-                                iconAnchor: [16, 32],
-                                popupAnchor: [0, -32]
-                            });
-
-                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersSecondaryAirportsLayer.addLayer(marker);
-                        }
-                    }
-                });
-
-                // Charger les industries (lignes 4691 à 4724 du deuxième CSV)
+                // Charger les industries (lignes 4691 à 4724)
                 lignes2.slice(4691, 4724).forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
@@ -211,7 +155,17 @@
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                 .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersIndustriesLayer.addLayer(marker);
+
+                            // Classer les marqueurs dans les bons groupes
+                            if (ligne >= 4691 && ligne <= 4695) industryGroups.viande.addLayer(marker);
+                            if (ligne >= 4696 && ligne <= 4698) industryGroups.cereal.addLayer(marker);
+                            if (ligne >= 4699 && ligne <= 4701) industryGroups.farine.addLayer(marker);
+                            if (ligne >= 4702 && ligne <= 4704) industryGroups.complement.addLayer(marker);
+                            if (ligne >= 4705 && ligne <= 4707) industryGroups.plastique.addLayer(marker);
+                            if (ligne >= 4708 && ligne <= 4710) industryGroups.usine.addLayer(marker);
+                            if (ligne >= 4711 && ligne <= 4712) industryGroups.depot.addLayer(marker);
+                            if (ligne >= 4713 && ligne <= 4716) industryGroups.pointsVente.addLayer(marker);
+                            if (ligne >= 4717 && ligne <= 4724) industryGroups.siropErable.addLayer(marker);
                         }
                     }
                 });
@@ -222,35 +176,81 @@
         }
 
         // Fonction pour basculer l'affichage des marqueurs
-        document.getElementById('toggleAirbusButton').addEventListener('click', () => {
-            if (map.hasLayer(markersAirbusLayer)) {
-                map.removeLayer(markersAirbusLayer);
-            } else {
-                map.addLayer(markersAirbusLayer);
-            }
-        });
-
-        document.getElementById('toggleMainAirportsButton').addEventListener('click', () => {
-            if (map.hasLayer(markersMainAirportsLayer)) {
-                map.removeLayer(markersMainAirportsLayer);
-            } else {
-                map.addLayer(markersMainAirportsLayer);
-            }
-        });
-
-        document.getElementById('toggleSecondaryAirportsButton').addEventListener('click', () => {
-            if (map.hasLayer(markersSecondaryAirportsLayer)) {
-                map.removeLayer(markersSecondaryAirportsLayer);
-            } else {
-                map.addLayer(markersSecondaryAirportsLayer);
-            }
-        });
-
         document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
-            if (map.hasLayer(markersIndustriesLayer)) {
-                map.removeLayer(markersIndustriesLayer);
+            const checkboxesContainer = document.getElementById('industriesCheckboxes');
+            checkboxesContainer.style.display = checkboxesContainer.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Afficher/Masquer les marqueurs de chaque industrie en fonction des cases cochées
+        document.getElementById('viandeCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.viande);
             } else {
-                map.addLayer(markersIndustriesLayer);
+                map.removeLayer(industryGroups.viande);
+            }
+        });
+
+        document.getElementById('cerealCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.cereal);
+            } else {
+                map.removeLayer(industryGroups.cereal);
+            }
+        });
+
+        document.getElementById('farineCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.farine);
+            } else {
+                map.removeLayer(industryGroups.farine);
+            }
+        });
+
+        document.getElementById('complementCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.complement);
+            } else {
+                map.removeLayer(industryGroups.complement);
+            }
+        });
+
+        document.getElementById('plastiqueCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.plastique);
+            } else {
+                map.removeLayer(industryGroups.plastique);
+            }
+        });
+
+        document.getElementById('usineCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.usine);
+            } else {
+                map.removeLayer(industryGroups.usine);
+            }
+        });
+
+        document.getElementById('depotCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.depot);
+            } else {
+                map.removeLayer(industryGroups.depot);
+            }
+        });
+
+        document.getElementById('pointsVenteCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.pointsVente);
+            } else {
+                map.removeLayer(industryGroups.pointsVente);
+            }
+        });
+
+        document.getElementById('siropErableCheckbox').addEventListener('change', (event) => {
+            if (event.target.checked) {
+                map.addLayer(industryGroups.siropErable);
+            } else {
+                map.removeLayer(industryGroups.siropErable);
             }
         });
 
