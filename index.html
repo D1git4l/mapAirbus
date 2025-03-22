@@ -71,6 +71,11 @@
         
         <h3>Afficher par catégorie</h3>
         <div id="categoryCheckboxes" class="checkbox-group"></div>
+
+        <div class="info-box">
+            <h4>Distance:</h4>
+            <span id="distance">Non calculée</span>
+        </div>
     </div>
     <div id="map"></div>
 
@@ -83,6 +88,9 @@
 
         const layers = {}; // Chaque catégorie sera un layer distinct
         let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
+        let departureMarker = null;
+        let arrivalMarker = null;
+        let routeLine = null;  // Ligne reliant départ et arrivée
 
         // URLs pour les fichiers CSV
         const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
@@ -124,8 +132,12 @@
                     marker.on('click', function() {
                         if (currentSelection === 'departure') {
                             document.getElementById('departure').innerText = name;
+                            departureMarker = marker; // Enregistrer le marqueur de départ
+                            updateRoute();
                         } else if (currentSelection === 'arrival') {
                             document.getElementById('arrival').innerText = name;
+                            arrivalMarker = marker; // Enregistrer le marqueur d'arrivée
+                            updateRoute();
                         }
                     });
                 }
@@ -223,6 +235,26 @@
             document.getElementById('arrival').innerText = event.target.value;
             document.getElementById('arrivalInput').style.display = 'none';
         });
+
+        // Fonction pour mettre à jour la ligne entre départ et arrivée
+        function updateRoute() {
+            if (departureMarker && arrivalMarker) {
+                const latlngs = [departureMarker.getLatLng(), arrivalMarker.getLatLng()];
+
+                // Retirer la ligne précédente, s'il y en a une
+                if (routeLine) {
+                    map.removeLayer(routeLine);
+                }
+
+                // Tracer une nouvelle ligne entre les deux marqueurs
+                routeLine = L.polyline(latlngs, { color: 'blue', weight: 4 }).addTo(map);
+
+                // Calculer la distance entre les deux points
+                const distance = departureMarker.getLatLng().distanceTo(arrivalMarker.getLatLng()) / 1000;  // En kilomètres
+                document.getElementById('distance').innerText = distance.toFixed(2) + ' km';
+            }
+        }
     </script>
 </body>
 </html>
+
