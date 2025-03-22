@@ -181,7 +181,7 @@
             
             if (departure && arrival) {
                 // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
-                const simBriefURL = 'https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}';
+                const simBriefURL = 'https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig={departure}&dest={arrival}';
                 window.open(simBriefURL, '_blank');
             } else {
                 alert("Veuillez sélectionner un aéroport de départ et d'arrivée.");
