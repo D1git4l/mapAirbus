@@ -29,7 +29,7 @@
             background: white;
             border: 1px solid #ccc;
         }
-        #generateLinkButton, #toggleMarkersButton {
+        #generateLinkButton, #toggleMarkersButton, #toggleAirbusButton, #toggleSecondaryAirportsButton, #toggleIndustriesButton {
             background: #007BFF;
             color: white;
             padding: 10px;
@@ -38,7 +38,7 @@
             width: 100%;
             margin-top: 5px;
         }
-        #toggleMarkersButton:hover, #generateLinkButton:hover {
+        #toggleMarkersButton:hover, #generateLinkButton:hover, #toggleAirbusButton:hover, #toggleSecondaryAirportsButton:hover, #toggleIndustriesButton:hover {
             background: #0056b3;
         }
         input[type="text"] {
@@ -61,7 +61,9 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <button id="generateLinkButton">Générer le plan de vol</button>
-        <button id="toggleMarkersButton">Aéroports secondaires et Industries</button>
+        <button id="toggleAirbusButton">Aéroports principaux</button>
+        <button id="toggleSecondaryAirportsButton">Aéroports secondaires</button>
+        <button id="toggleIndustriesButton">Industries</button>
     </div>
 
     <!-- Carte -->
@@ -78,25 +80,51 @@
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
-        let markersLayer = L.layerGroup().addTo(map);
-        let secondaryAirportsLayer = L.layerGroup().addTo(map);  // Aéroports secondaires
-        let industriesLayer = L.layerGroup().addTo(map);  // Industries
-        let markersSupplementaireVisible = false;
+        // Calques pour les différents types de marqueurs
+        let airbusLayer = L.layerGroup().addTo(map);
+        let secondaryAirportsLayer = L.layerGroup().addTo(map);
+        let industriesLayer = L.layerGroup().addTo(map);
 
         let activeInput = null; // Pour savoir quelle case (départ ou arrivée) est active
 
+        // Charger les marqueurs
         async function chargerMarqueurs() {
             try {
                 const response = await fetch(sheetURL);
                 const textCSV = await response.text();
                 const rows = textCSV.split('\n').slice(1); // Ignorer la première ligne (entêtes)
 
-                markersLayer.clearLayers();
+                airbusLayer.clearLayers();
                 secondaryAirportsLayer.clearLayers();
                 industriesLayer.clearLayers();
 
-                // Aéroports secondaires (lignes 2 à 4690)
-                const secondaryAirportsRows = rows.slice(1, 4690);
+                // Marqueurs pour les aéroports principaux (lignes 2 à 4690)
+                const airbusRows = rows.slice(1, 4690);
+                airbusRows.forEach(row => {
+                    const columns = row.split(',');
+                    if (columns.length >= 4) {
+                        const name = columns[0].trim();
+                        const lat = parseFloat(columns[1].trim().replace(',', '.'));
+                        const lng = parseFloat(columns[2].trim().replace(',', '.'));
+                        const iconUrl = columns[3].trim();
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const customIcon = L.icon({
+                                iconUrl: iconUrl,
+                                iconSize: [50, 50],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
+
+                            const marker = L.marker([lat, lng], { icon: customIcon })
+                                .bindPopup(`<strong>${name}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                            airbusLayer.addLayer(marker);
+                        }
+                    }
+                });
+
+                // Marqueurs pour les aéroports secondaires (lignes 4691 à 4724)
+                const secondaryAirportsRows = rows.slice(4690, 4724);
                 secondaryAirportsRows.forEach(row => {
                     const columns = row.split(',');
                     if (columns.length >= 4) {
@@ -120,8 +148,8 @@
                     }
                 });
 
-                // Industries (lignes 4691 à 4724)
-                const industriesRows = rows.slice(4690, 4724);
+                // Marqueurs pour les industries (lignes 4725 à la fin)
+                const industriesRows = rows.slice(4724);
                 industriesRows.forEach(row => {
                     const columns = row.split(',');
                     if (columns.length >= 4) {
@@ -149,6 +177,31 @@
                 console.error('Erreur lors du chargement des données CSV:', error);
             }
         }
+
+        // Fonctions de gestion des marqueurs
+        document.getElementById('toggleAirbusButton').addEventListener('click', () => {
+            if (map.hasLayer(airbusLayer)) {
+                airbusLayer.removeFrom(map);
+            } else {
+                airbusLayer.addTo(map);
+            }
+        });
+
+        document.getElementById('toggleSecondaryAirportsButton').addEventListener('click', () => {
+            if (map.hasLayer(secondaryAirportsLayer)) {
+                secondaryAirportsLayer.removeFrom(map);
+            } else {
+                secondaryAirportsLayer.addTo(map);
+            }
+        });
+
+        document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
+            if (map.hasLayer(industriesLayer)) {
+                industriesLayer.removeFrom(map);
+            } else {
+                industriesLayer.addTo(map);
+            }
+        });
 
         // Fonction pour définir l'aéroport actif (Départ ou Arrivée)
         function setAirport(name, oaci) {
@@ -205,18 +258,6 @@
                 window.open(simbriefURL, '_blank');
             } else {
                 alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
-            }
-        });
-
-        // Afficher ou masquer les marqueurs secondaires et les industries
-        document.getElementById('toggleMarkersButton').addEventListener('click', () => {
-            markersSupplementaireVisible = !markersSupplementaireVisible;
-            if (markersSupplementaireVisible) {
-                secondaryAirportsLayer.addTo(map);
-                industriesLayer.addTo(map);
-            } else {
-                secondaryAirportsLayer.removeFrom(map);
-                industriesLayer.removeFrom(map);
             }
         });
 
