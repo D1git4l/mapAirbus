@@ -67,15 +67,7 @@
         <button id="toggleSecondairesButton" class="toggle-button">Aéroports secondaires</button>
         <button id="toggleIndustriesButton" class="toggle-button">Industries</button>
         <div class="category" id="industryFilters" style="display: none;">
-            <label><input type="checkbox" data-category="Viande"> Viande</label>
-            <label><input type="checkbox" data-category="Céréal"> Céréal</label>
-            <label><input type="checkbox" data-category="Farine"> Farine</label>
-            <label><input type="checkbox" data-category="Compléments"> Compléments</label>
-            <label><input type="checkbox" data-category="Plastique"> Plastique</label>
-            <label><input type="checkbox" data-category="Usine"> Usine</label>
-            <label><input type="checkbox" data-category="Dépots"> Dépots</label>
-            <label><input type="checkbox" data-category="Points de vente"> Points de vente</label>
-            <label><input type="checkbox" data-category="Sirop d'érable"> Sirop d'érable</label>
+            <!-- Les cases à cocher seront ajoutées dynamiquement ici -->
         </div>
     </div>
     <div id="map"></div>
@@ -92,18 +84,8 @@
             "Aéroports secondaires": L.layerGroup(),
             "Industries": L.layerGroup()
         };
-        
-        const industryLayers = {
-            "Viande": L.layerGroup(),
-            "Céréal": L.layerGroup(),
-            "Farine": L.layerGroup(),
-            "Compléments": L.layerGroup(),
-            "Plastique": L.layerGroup(),
-            "Usine": L.layerGroup(),
-            "Dépots": L.layerGroup(),
-            "Points de vente": L.layerGroup(),
-            "Sirop d'érable": L.layerGroup()
-        };
+
+        const industryLayers = {}; // Ceci sera rempli dynamiquement pour chaque catégorie
 
         // URLs pour les fichiers CSV
         const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
@@ -114,7 +96,7 @@
             const response = await fetch(sheetURL);
             const text = await response.text();
             const rows = text.split('\n').slice(rangeStart, rangeEnd);
-            
+
             // Trier les données par la colonne de référence (colonne H - index 7)
             const sortedRows = rows.sort((a, b) => {
                 const refA = a.split(',')[referenceColumn].trim();
@@ -129,7 +111,7 @@
                 const lng = parseFloat(cols[2].trim().replace(',', '.'));
                 const name = cols[0].trim();
                 const info = infoColumns.map(i => cols[i] ? cols[i].trim() : '').join(' ');
-                
+
                 if (!isNaN(lat) && !isNaN(lng)) {
                     const marker = L.marker([lat, lng])
                         .bindPopup(`<strong>${name}</strong><br>${info}`);
@@ -142,25 +124,75 @@
         chargerMarqueurs(sheetURL1, "Airbus", 1, 18); // Charger les données Airbus
         chargerMarqueurs(sheetURL1, "Aéroports principaux", 18, 499); // Charger les aéroports principaux
         chargerMarqueurs(sheetURL2, "Aéroports secondaires", 1, 4690); // Charger les aéroports secondaires
-        chargerMarqueurs(sheetURL2, "Industries", 4691, 4724, [4, 5, 6], 7); // Charger les industries, triées par la colonne H
+
+        // Charger les industries et créer dynamiquement les boutons
+        async function chargerIndustries() {
+            const response = await fetch(sheetURL2);
+            const text = await response.text();
+            const rows = text.split('\n').slice(4691, 4724); // Récupérer les lignes des industries
+
+            // Créer les catégories dynamiquement en utilisant la colonne G
+            const categories = new Set();
+            rows.forEach(row => {
+                const cols = row.split(',');
+                const category = cols[6].trim(); // Colonne G : catégorie
+                categories.add(category); // Ajouter la catégorie à l'ensemble
+            });
+
+            // Créer des cases à cocher pour chaque catégorie
+            const categoryContainer = document.getElementById('industryFilters');
+            categories.forEach(category => {
+                // Créer un groupe de marqueurs pour chaque catégorie
+                industryLayers[category] = L.layerGroup();
+
+                // Créer un bouton de case à cocher pour chaque catégorie
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `checkbox-${category}`;
+                checkbox.dataset.category = category;
+
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = category;
+
+                categoryContainer.appendChild(checkbox);
+                categoryContainer.appendChild(label);
+
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        industryLayers[category].addTo(map);
+                    } else {
+                        map.removeLayer(industryLayers[category]);
+                    }
+                });
+
+                // Ajouter les marqueurs pour cette catégorie
+                rows.forEach(row => {
+                    const cols = row.split(',');
+                    const rowCategory = cols[6].trim(); // Colonne G : catégorie
+                    if (rowCategory === category) {
+                        const lat = parseFloat(cols[1].trim().replace(',', '.'));
+                        const lng = parseFloat(cols[2].trim().replace(',', '.'));
+                        const name = cols[0].trim();
+                        const info = [cols[4], cols[5], cols[6]].map(i => i ? i.trim() : '').join(' ');
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const marker = L.marker([lat, lng])
+                                .bindPopup(`<strong>${name}</strong><br>${info}`);
+                            industryLayers[category].addLayer(marker);
+                        }
+                    }
+                });
+            });
+        }
+
+        // Appel pour charger les industries
+        chargerIndustries();
 
         // Afficher/Masquer les filtres des industries
         document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
             document.getElementById('industryFilters').style.display = 
                 document.getElementById('industryFilters').style.display === 'none' ? 'block' : 'none';
-        });
-
-        // Ajouter/retirer les couches des industries
-        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                if (this.checked) {
-                    industryLayers[this.dataset.category].addTo(map);
-                } else {
-                    if (map.hasLayer(industryLayers[this.dataset.category])) {
-                        map.removeLayer(industryLayers[this.dataset.category]);
-                    }
-                }
-            });
         });
 
         // Boutons pour afficher/masquer les couches
@@ -215,3 +247,4 @@
     </script>
 </body>
 </html>
+
