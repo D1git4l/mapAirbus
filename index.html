@@ -91,6 +91,23 @@
         // Fonction pour charger les marqueurs depuis le CSV
         async function chargerMarqueurs() {
             try {
+                // Charger les marqueurs Airbus (ceux initiaux)
+                const marqueursAirbus = [
+                    // Exemple de marqueur
+                    { lat: 48.8566, lng: 2.3522, nom: "Aéroport Airbus", iconeUrl: "https://example.com/airbus_icon.png" }
+                ];
+                marqueursAirbus.forEach(marqueur => {
+                    const iconePersonnalisee = L.icon({
+                        iconUrl: marqueur.iconeUrl,
+                        iconSize: [50, 50],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -32]
+                    });
+                    const marker = L.marker([marqueur.lat, marqueur.lng], { icon: iconePersonnalisee })
+                        .bindPopup(`<strong>${marqueur.nom}</strong><br>Latitude : ${marqueur.lat}, Longitude : ${marqueur.lng}`);
+                    markersAirbusLayer.addLayer(marker);
+                });
+
                 // Charger les aéroports principaux
                 const reponse1 = await fetch(sheetURL1);
                 const texteCSV1 = await reponse1.text();
@@ -178,8 +195,11 @@
 
         // Fonction pour basculer l'affichage des marqueurs
         document.getElementById('toggleAirbusButton').addEventListener('click', () => {
-            markersAirbusLayer.clearLayers(); // Ajoute la fonction pour afficher et masquer les marqueurs Airbus
-            chargerMarqueurs();  // Recharge les marqueurs si nécessaires
+            if (map.hasLayer(markersAirbusLayer)) {
+                map.removeLayer(markersAirbusLayer);
+            } else {
+                map.addLayer(markersAirbusLayer);
+            }
         });
 
         document.getElementById('toggleMainAirportsButton').addEventListener('click', () => {
