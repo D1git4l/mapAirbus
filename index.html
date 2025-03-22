@@ -29,7 +29,7 @@
             background: white;
             border: 1px solid #ccc;
         }
-        #generateLinkButton, #toggleMarkersButton {
+        #generateLinkButton, #toggleMarkersButton, #toggleMediumButton {
             background: #007BFF;
             color: white;
             padding: 10px;
@@ -38,7 +38,7 @@
             width: 100%;
             margin-top: 5px;
         }
-        #toggleMarkersButton:hover, #generateLinkButton:hover {
+        #toggleMarkersButton:hover, #generateLinkButton:hover, #toggleMediumButton:hover {
             background: #0056b3;
         }
         input[type="text"] {
@@ -49,7 +49,6 @@
     </style>
 </head>
 <body>
-    <!-- Colonne de gauche -->
     <div id="sidebar">
         <h2>Sélection des aéroports</h2>
         <div class="info-box">
@@ -62,13 +61,11 @@
         </div>
         <button id="generateLinkButton">Générer le plan de vol</button>
         <button id="toggleMarkersButton">Aéroports principaux</button>
+        <button id="toggleMediumButton">Aéroport Medium</button>
     </div>
-    <!-- Carte -->
     <div id="map"></div>
-    
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.js"></script>
-    
     <script>
         const map = L.map('map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
@@ -84,12 +81,11 @@
         });
         map.addControl(measureControl);
 
-        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
+        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?output=csv';
 
         let markersLayer = L.layerGroup().addTo(map);
-        let markersSupplementaireLayer = L.layerGroup().addTo(map);
+        let markersMediumLayer = L.layerGroup().addTo(map);
         let markersSupplementaireVisible = false;
-        let activeInput = null; // Pour savoir quelle case (départ ou arrivée) est active
 
         async function chargerMarqueurs() {
             try {
@@ -98,10 +94,10 @@
                 const lignes = texteCSV.split('\n').slice(1);
 
                 markersLayer.clearLayers();
-                markersSupplementaireLayer.clearLayers();
+                markersMediumLayer.clearLayers();
 
-                const lignesPrincipales = lignes.slice(0, 17);
-                lignesPrincipales.forEach(ligne => {
+                // Marqueurs principaux
+                lignes.slice(0, 17).forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
                         const nom = colonnes[0].trim();
@@ -118,38 +114,42 @@
                             });
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`)
-                                .on('click', () => setAirport(nom, colonnes[4]?.trim())); // Modifier en cliquant
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
                             markersLayer.addLayer(marker);
                         }
                     }
                 });
 
+                // Marqueurs supplémentaires (Aéroport Medium)
                 if (markersSupplementaireVisible) {
-                    const lignesSupplementaires = lignes.slice(17, 500);
-                    lignesSupplementaires.forEach((ligne, index) => {
+                    lignes.slice(17).forEach(ligne => {
                         const colonnes = ligne.split(',');
-                        if (colonnes.length >= 4) {
+                        if (colonnes.length >= 7) {
                             const nom = colonnes[0].trim();
-                            let lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                            let lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                            const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                            const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
                             const iconeUrl = colonnes[3].trim();
+                            const infoE = colonnes[4].trim();  // Info colonne E
+                            const infoF = colonnes[5].trim();  // Info colonne F
+                            const infoG = colonnes[6].trim();  // Info colonne G
 
                             if (!isNaN(lat) && !isNaN(lng)) {
-                                const offset = 0.001 * (index % 2 === 0 ? 1 : -1);
-                                lat += offset;
-                                lng += offset;
-
                                 const iconePersonnalisee = L.icon({
                                     iconUrl: iconeUrl,
-                                    iconSize: [25, 25],
+                                    iconSize: [50, 50],
                                     iconAnchor: [16, 32],
                                     popupAnchor: [0, -32]
                                 });
 
                                 const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                    .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                                markersSupplementaireLayer.addLayer(marker);
+                                    .bindPopup(`
+                                        <strong>${nom}</strong><br>
+                                        Latitude : ${lat}, Longitude : ${lng}<br>
+                                        <strong>Info E:</strong> ${infoE}<br>
+                                        <strong>Info F:</strong> ${infoF}<br>
+                                        <strong>Info G:</strong> ${infoG}
+                                    `);
+                                markersMediumLayer.addLayer(marker);
                             }
                         }
                     });
@@ -159,66 +159,30 @@
             }
         }
 
-        // Fonction pour définir l'aéroport actif (Départ ou Arrivée)
-        function setAirport(name, oaci) {
-            if (activeInput === 'departure') {
+        // Fonction pour afficher/masquer les marqueurs supplémentaires
+        document.getElementById('toggleMediumButton').addEventListener('click', () => {
+            markersSupplementaireVisible = !markersSupplementaireVisible;
+            chargerMarqueurs();
+        });
+
+        // Fonction pour définir l'aéroport sélectionné
+        function setAirport(name) {
+            if (document.getElementById('departure').textContent === 'Non sélectionné') {
                 document.getElementById('departure').textContent = name;
-            } else if (activeInput === 'arrival') {
+            } else {
                 document.getElementById('arrival').textContent = name;
             }
-            hideInput(); // Cacher l'input après la sélection
         }
-
-        // Afficher l'input pour modifier manuellement ou sélection automatique via un clic
-        function showInput(inputType) {
-            activeInput = inputType;
-            if (inputType === 'departure') {
-                document.getElementById('departureInput').style.display = 'block';
-                document.getElementById('departure').style.display = 'none';
-            } else if (inputType === 'arrival') {
-                document.getElementById('arrivalInput').style.display = 'block';
-                document.getElementById('arrival').style.display = 'none';
-            }
-        }
-
-        // Masquer l'input lorsque la saisie est terminée
-        function hideInput() {
-            document.getElementById('departureInput').style.display = 'none';
-            document.getElementById('arrivalInput').style.display = 'none';
-            document.getElementById('departure').style.display = 'inline';
-            document.getElementById('arrival').style.display = 'inline';
-        }
-
-        // Ajouter un événement pour la saisie manuelle des aéroports
-        document.getElementById('departure').addEventListener('click', () => showInput('departure'));
-        document.getElementById('arrival').addEventListener('click', () => showInput('arrival'));
-
-        // Ajouter la saisie manuelle
-        document.getElementById('departureInput').addEventListener('change', (e) => {
-            document.getElementById('departure').textContent = e.target.value;
-            hideInput();
-        });
-
-        document.getElementById('arrivalInput').addEventListener('change', (e) => {
-            document.getElementById('arrival').textContent = e.target.value;
-            hideInput();
-        });
 
         document.getElementById('generateLinkButton').addEventListener('click', () => {
-            const departureText = document.getElementById('departure').textContent;
-            const arrivalText = document.getElementById('arrival').textContent;
-
-            if (departureText !== 'Non sélectionné' && arrivalText !== 'Non sélectionné') {
-                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departureText}&dest=${arrivalText}`;
+            const departure = document.getElementById('departure').textContent;
+            const arrival = document.getElementById('arrival').textContent;
+            if (departure !== 'Non sélectionné' && arrival !== 'Non sélectionné') {
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
                 window.open(simbriefURL, '_blank');
             } else {
                 alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
             }
-        });
-
-        document.getElementById('toggleMarkersButton').addEventListener('click', () => {
-            markersSupplementaireVisible = !markersSupplementaireVisible;
-            chargerMarqueurs();
         });
 
         chargerMarqueurs();
