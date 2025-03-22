@@ -85,49 +85,53 @@
         let industriesVisible = false;
         let airbusVisible = true;
 
-        async function chargerMarqueurs(url, layer, type) {
-            try {
-                const response = await fetch(url);
-                const csvText = await response.text();
-                const lines = csvText.split("\n").slice(1);
+       async function chargerMarqueurs(url, layer, type) {
+    try {
+        const response = await fetch(url);
+        const csvText = await response.text();
+        const lines = csvText.split("\n").slice(1); // Ignore header line
 
-                layer.clearLayers();
+        layer.clearLayers();
 
-                lines.forEach(line => {
-                    const cols = line.split(",");
-                    if (cols.length >= 4) {
-                        const name = cols[0].trim();
-                        const lat = parseFloat(cols[1].trim().replace(",", "."));
-                        const lng = parseFloat(cols[2].trim().replace(",", "."));
-                        const iconUrl = cols[3].trim();
-                        const category = cols[4]?.trim().toLowerCase(); 
+        lines.forEach(line => {
+            const cols = line.split(",");
+            if (cols.length >= 4) {
+                const name = cols[0].trim();
+                const lat = parseFloat(cols[1].trim().replace(",", "."));
+                const lng = parseFloat(cols[2].trim().replace(",", "."));
+                const iconUrl = cols[3].trim();
+                const category = cols[4]?.trim().toLowerCase(); 
 
-                        if (!isNaN(lat) && !isNaN(lng)) {
-                            const icon = L.icon({
-                                iconUrl: iconUrl,
-                                iconSize: [30, 30],
-                                iconAnchor: [16, 32],
-                                popupAnchor: [0, -32]
-                            });
+                console.log("Nom: ", name, "Latitude: ", lat, "Longitude: ", lng); // Affichez les informations des marqueurs
 
-                            const marker = L.marker([lat, lng], { icon: icon })
-                                .bindPopup(`<strong>${name}</strong><br>Latitude: ${lat}, Longitude: ${lng}`);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    const icon = L.icon({
+                        iconUrl: iconUrl,
+                        iconSize: [30, 30],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -32]
+                    });
 
-                            if (type === "large" || type === "medium") {
-                                layer.addLayer(marker);
-                            } else if (type === "industry" && category === "industrie") {
-                                layer.addLayer(marker);
-                            } else if (type === "airbus" && category === "airbus") {
-                                layer.addLayer(marker);
-                            }
-                        }
+                    const marker = L.marker([lat, lng], { icon: icon })
+                        .bindPopup(`<strong>${name}</strong><br>Latitude: ${lat}, Longitude: ${lng}`);
+
+                    // Logique selon le type
+                    if (type === "large" || type === "medium") {
+                        layer.addLayer(marker);
+                    } else if (type === "industry" && category === "industrie") {
+                        layer.addLayer(marker);
+                    } else if (type === "airbus" && category === "airbus") {
+                        layer.addLayer(marker);
                     }
-                });
-
-            } catch (error) {
-                console.error(`Erreur chargement des ${type} :`, error);
+                }
             }
-        }
+        });
+
+    } catch (error) {
+        console.error(`Erreur chargement des ${type} :`, error);
+    }
+}
+
 
         document.getElementById("toggleLargeAirportsButton").addEventListener("click", () => {
             largeAirportsVisible = !largeAirportsVisible;
