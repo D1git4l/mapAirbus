@@ -84,9 +84,6 @@
 
         let activeInput = null; // Pour savoir quelle case (départ ou arrivée) est active
 
-        let departure = '';
-        let arrival = '';
-
         async function chargerMarqueurs() {
             try {
                 const reponse = await fetch(sheetURL);
@@ -159,10 +156,8 @@
         // Fonction pour définir l'aéroport actif (Départ ou Arrivée)
         function setAirport(name, oaci) {
             if (activeInput === 'departure') {
-                departure = oaci;
                 document.getElementById('departure').textContent = name;
             } else if (activeInput === 'arrival') {
-                arrival = oaci;
                 document.getElementById('arrival').textContent = name;
             }
             hideInput(); // Cacher l'input après la sélection
@@ -194,20 +189,21 @@
 
         // Ajouter la saisie manuelle
         document.getElementById('departureInput').addEventListener('change', (e) => {
-            departure = e.target.value;
-            document.getElementById('departure').textContent = departure;
+            document.getElementById('departure').textContent = e.target.value;
             hideInput();
         });
 
         document.getElementById('arrivalInput').addEventListener('change', (e) => {
-            arrival = e.target.value;
-            document.getElementById('arrival').textContent = arrival;
+            document.getElementById('arrival').textContent = e.target.value;
             hideInput();
         });
 
         document.getElementById('generateLinkButton').addEventListener('click', () => {
-            if (departure && arrival) {
-                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
+            const departureText = document.getElementById('departure').textContent;
+            const arrivalText = document.getElementById('arrival').textContent;
+
+            if (departureText !== 'Non sélectionné' && arrivalText !== 'Non sélectionné') {
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departureText}&dest=${arrivalText}`;
                 window.open(simbriefURL, '_blank');
             } else {
                 alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
