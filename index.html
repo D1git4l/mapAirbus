@@ -68,11 +68,13 @@
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.js"></script>
     <script>
-        const map = L.map('map').setView([20, 0], 2);
+        // Initialisation de la carte avec un centre et un zoom de base
+        const map = L.map('map').setView([20, 0], 2); // Centré sur une vue mondiale par défaut
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
+        // Ajout du contrôle de mesure
         const measureControl = new L.Control.Measure({
             primaryLengthUnit: "nauticalMiles",
             secondaryLengthUnit: "kilometers",
@@ -82,13 +84,14 @@
         });
         map.addControl(measureControl);
 
+        // URL des données CSV pour les aéroports
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?output=csv';
         const sheetMediumURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?output=csv&sheet=Medium';
 
+        // Layers pour les marqueurs
         let markersLayer = L.layerGroup().addTo(map);
         let markersMediumLayer = L.layerGroup();
         let markersSupplementaireVisible = false;
-        let allMarkers = [];
 
         async function chargerMarqueurs(url, isMedium = false) {
             try {
@@ -130,7 +133,6 @@
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                 .bindPopup(popupContent);
                             layerToAdd.addLayer(marker);
-                            allMarkers.push(marker);
                         }
                     }
                 });
@@ -152,10 +154,8 @@
         function setAirport(name) {
             if (document.getElementById('departure').textContent === 'Non sélectionné') {
                 document.getElementById('departure').textContent = name;
-                document.getElementById('departureInput').style.display = 'none';
             } else {
                 document.getElementById('arrival').textContent = name;
-                document.getElementById('arrivalInput').style.display = 'none';
             }
         }
 
@@ -163,9 +163,15 @@
             const departure = document.getElementById('departure').textContent;
             const arrival = document.getElementById('arrival').textContent;
             if (departure !== 'Non sélectionné' && arrival !== 'Non sélectionné') {
-                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=<span class="math-inline">\{departure\}&dest\=</span>{arrival}`;
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
                 window.open(simbriefURL, '_blank');
             } else {
                 alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
             }
         });
+
+        // Initialisation des marqueurs
+        chargerMarqueurs(sheetURL);
+    </script>
+</body>
+</html>
