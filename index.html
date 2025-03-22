@@ -89,12 +89,10 @@
         const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
         // Fonction pour charger les marqueurs depuis les CSV
-        async function chargerMarqueurs(sheetURL, category) {
+        async function chargerMarqueurs(sheetURL, categories) {
             const response = await fetch(sheetURL);
             const text = await response.text();
             const rows = text.split('\n').slice(1); // Ignorer la première ligne
-
-            layers[category] = L.layerGroup().addTo(map); // Créer un layer spécifique pour chaque catégorie
 
             rows.forEach(row => {
                 const cols = row.split(',');
@@ -102,9 +100,10 @@
                 const lng = parseFloat(cols[2].trim().replace(',', '.'));
                 const name = cols[0].trim();
                 const iconURL = cols[3].trim();  // Colonne D pour l'icône
-                const info = cols.slice(4, 7).map(i => cols[i] ? cols[i].trim() : '').join(' '); // Colonnes E, F, G
-
-                if (!isNaN(lat) && !isNaN(lng)) {
+                const info = [cols[4].trim(), cols[5].trim(), cols[6].trim()].join(' '); // Informations supplémentaires
+                const category = cols[7].trim(); // Catégorie dans la colonne H
+                
+                if (categories.includes(category) && !isNaN(lat) && !isNaN(lng)) {
                     // Créer une icône personnalisée
                     const icon = L.icon({
                         iconUrl: iconURL,
@@ -114,6 +113,11 @@
 
                     const marker = L.marker([lat, lng], { icon: icon })
                         .bindPopup(`<strong>${name}</strong><br>${info}`);
+
+                    // Ajouter le marqueur au layer de la catégorie correspondante
+                    if (!layers[category]) {
+                        layers[category] = L.layerGroup(); // Créer un layer pour cette catégorie si nécessaire
+                    }
                     layers[category].addLayer(marker);
 
                     // Ajouter un gestionnaire de clic sur chaque marqueur
@@ -128,7 +132,7 @@
             });
         }
 
-        // Fonction pour récupérer les catégories à partir du Sheet 2 (colonne H)
+        // Fonction pour récupérer les catégories à partir du Sheet (colonne H)
         async function chargerCategories(sheetURL) {
             const response = await fetch(sheetURL);
             const text = await response.text();
@@ -142,14 +146,9 @@
 
             console.log('Catégories chargées:', categories);
 
-            // Trier les catégories par ordre alphabétique
-            const sortedCategories = Array.from(categories).sort();
-
             // Afficher les catégories sous forme de cases à cocher
             const categoryCheckboxes = document.getElementById('categoryCheckboxes');
-            categoryCheckboxes.innerHTML = ''; // Réinitialiser les cases à cocher avant de les ajouter
-
-            sortedCategories.forEach(category => {
+            categories.forEach(category => {
                 const label = document.createElement('label');
                 label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
                 categoryCheckboxes.appendChild(label);
@@ -178,12 +177,13 @@
             });
 
             // Charger les marqueurs pour les catégories
-            sortedCategories.forEach(category => {
-                chargerMarqueurs(sheetURL1, category);
-            });
+            chargerMarqueurs(sheetURL, Array.from(categories));
         }
 
-        // Appeler la fonction pour charger les catégories
+        // Charger les catégories du Sheet 1
+        chargerCategories(sheetURL1);
+
+        // Charger les catégories du Sheet 2
         chargerCategories(sheetURL2);
 
         // Fonction pour générer le plan de vol (SimBrief)
