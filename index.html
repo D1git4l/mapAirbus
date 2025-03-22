@@ -29,7 +29,7 @@
             background: white;
             border: 1px solid #ccc;
         }
-        button {
+        #generateLinkButton, #toggleMarkersButton {
             background: #007BFF;
             color: white;
             padding: 10px;
@@ -38,13 +38,18 @@
             width: 100%;
             margin-top: 5px;
         }
-        button:hover {
+        #toggleMarkersButton:hover, #generateLinkButton:hover {
             background: #0056b3;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
-
+    <!-- Colonne de gauche -->
     <div id="sidebar">
         <h2>Sélection des aéroports</h2>
         <div class="info-box">
@@ -56,124 +61,170 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <button id="generateLinkButton">Générer le plan de vol</button>
-        <button id="toggleLargeAirportsButton">Aéroports principaux</button>
-        <button id="toggleMediumAirportsButton">Aéroports moyens</button>
-        <button id="toggleIndustriesButton">Industries</button>
-        <button id="toggleAirbusSitesButton">Sites Airbus</button>
+        <button id="toggleMarkersButton">Aéroports principaux</button>
     </div>
 
+    <!-- Carte -->
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.js"></script>
+
     <script>
         const map = L.map('map').setView([20, 0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
-        const largeAirportsURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?output=csv';
-        const mediumAirportsURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?output=csv';
+        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
 
-        let largeAirportsLayer = L.layerGroup().addTo(map);
-        let mediumAirportsLayer = L.layerGroup();
-        let industriesLayer = L.layerGroup();
-        let airbusLayer = L.layerGroup().addTo(map); // Airbus affiché par défaut
+        let markersLayer = L.layerGroup().addTo(map);
+        let markersSupplementaireLayer = L.layerGroup().addTo(map);
+        let markersSupplementaireVisible = false;
 
-        let largeAirportsVisible = false;
-        let mediumAirportsVisible = false;
-        let industriesVisible = false;
-        let airbusVisible = true;
+        let activeInput = null; // Pour savoir quelle case (départ ou arrivée) est active
 
-       async function chargerMarqueurs(url, layer, type) {
-    try {
-        const response = await fetch(url);
-        const csvText = await response.text();
-        const lines = csvText.split("\n").slice(1); // Ignore header line
+        async function chargerMarqueurs() {
+            try {
+                const reponse = await fetch(sheetURL);
+                const texteCSV = await reponse.text();
+                const lignes = texteCSV.split('\n').slice(1);
 
-        layer.clearLayers();
+                markersLayer.clearLayers();
+                markersSupplementaireLayer.clearLayers();
 
-        lines.forEach(line => {
-            const cols = line.split(",");
-            if (cols.length >= 4) {
-                const name = cols[0].trim();
-                const lat = parseFloat(cols[1].trim().replace(",", "."));
-                const lng = parseFloat(cols[2].trim().replace(",", "."));
-                const iconUrl = cols[3].trim();
-                const category = cols[4]?.trim().toLowerCase(); 
+                const lignesPrincipales = lignes.slice(0, 17);
+                lignesPrincipales.forEach(ligne => {
+                    const colonnes = ligne.split(',');
+                    if (colonnes.length >= 4) {
+                        const nom = colonnes[0].trim();
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                        const iconeUrl = colonnes[3].trim();
 
-                console.log("Nom: ", name, "Latitude: ", lat, "Longitude: ", lng); // Affichez les informations des marqueurs
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const iconePersonnalisee = L.icon({
+                                iconUrl: iconeUrl,
+                                iconSize: [50, 50],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
 
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    const icon = L.icon({
-                        iconUrl: iconUrl,
-                        iconSize: [30, 30],
-                        iconAnchor: [16, 32],
-                        popupAnchor: [0, -32]
-                    });
-
-                    const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(`<strong>${name}</strong><br>Latitude: ${lat}, Longitude: ${lng}`);
-
-                    // Logique selon le type
-                    if (type === "large" || type === "medium") {
-                        layer.addLayer(marker);
-                    } else if (type === "industry" && category === "industrie") {
-                        layer.addLayer(marker);
-                    } else if (type === "airbus" && category === "airbus") {
-                        layer.addLayer(marker);
+                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                            marker.on('click', () => setAirport(nom, colonnes[4]?.trim())); // Modifier en cliquant
+                            markersLayer.addLayer(marker);
+                        }
                     }
+                });
+
+                if (markersSupplementaireVisible) {
+                    const lignesSupplementaires = lignes.slice(17, 500);
+                    lignesSupplementaires.forEach((ligne, index) => {
+                        const colonnes = ligne.split(',');
+                        if (colonnes.length >= 4) {
+                            const nom = colonnes[0].trim();
+                            let lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                            let lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                            const iconeUrl = colonnes[3].trim();
+
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                const offset = 0.001 * (index % 2 === 0 ? 1 : -1);
+                                lat += offset;
+                                lng += offset;
+
+                                const iconePersonnalisee = L.icon({
+                                    iconUrl: iconeUrl,
+                                    iconSize: [25, 25],
+                                    iconAnchor: [16, 32],
+                                    popupAnchor: [0, -32]
+                                });
+
+                                const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                    .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                                markersSupplementaireLayer.addLayer(marker);
+                            }
+                        }
+                    });
                 }
+
+            } catch (erreur) {
+                console.error('Erreur lors du chargement des données CSV :', erreur);
             }
+        }
+
+        // Fonction pour définir l'aéroport actif (Départ ou Arrivée)
+        function setAirport(name, oaci) {
+            if (activeInput === 'departure') {
+                document.getElementById('departure').textContent = name;
+            } else if (activeInput === 'arrival') {
+                document.getElementById('arrival').textContent = name;
+            }
+            hideInput(); // Cacher l'input après la sélection
+        }
+
+        // Afficher l'input pour modifier manuellement ou sélection automatique via un clic
+        function showInput(inputType) {
+            activeInput = inputType;
+            if (inputType === 'departure') {
+                document.getElementById('departureInput').style.display = 'block';
+                document.getElementById('departure').style.display = 'none';
+            } else if (inputType === 'arrival') {
+                document.getElementById('arrivalInput').style.display = 'block';
+                document.getElementById('arrival').style.display = 'none';
+            }
+        }
+
+        // Masquer l'input lorsque la saisie est terminée
+        function hideInput() {
+            document.getElementById('departureInput').style.display = 'none';
+            document.getElementById('arrivalInput').style.display = 'none';
+            document.getElementById('departure').style.display = 'inline';
+            document.getElementById('arrival').style.display = 'inline';
+        }
+
+        // Ajouter un événement pour la saisie manuelle des aéroports
+        document.getElementById('departure').addEventListener('click', () => showInput('departure'));
+        document.getElementById('arrival').addEventListener('click', () => showInput('arrival'));
+
+        // Ajouter la saisie manuelle
+        document.getElementById('departureInput').addEventListener('change', (e) => {
+            document.getElementById('departure').textContent = e.target.value;
+            hideInput();
         });
 
-    } catch (error) {
-        console.error(`Erreur chargement des ${type} :`, error);
-    }
-}
+        document.getElementById('arrivalInput').addEventListener('change', (e) => {
+            document.getElementById('arrival').textContent = e.target.value;
+            hideInput();
+        });
 
+        document.getElementById('generateLinkButton').addEventListener('click', () => {
+            const departureText = document.getElementById('departure').textContent;
+            const arrivalText = document.getElementById('arrival').textContent;
 
-        document.getElementById("toggleLargeAirportsButton").addEventListener("click", () => {
-            largeAirportsVisible = !largeAirportsVisible;
-            if (largeAirportsVisible) {
-                map.addLayer(largeAirportsLayer);
+            if (departureText !== 'Non sélectionné' && arrivalText !== 'Non sélectionné') {
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departureText}&dest=${arrivalText}`;
+                window.open(simbriefURL, '_blank');
             } else {
-                map.removeLayer(largeAirportsLayer);
+                alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
             }
         });
 
-        document.getElementById("toggleMediumAirportsButton").addEventListener("click", () => {
-            mediumAirportsVisible = !mediumAirportsVisible;
-            if (mediumAirportsVisible) {
-                map.addLayer(mediumAirportsLayer);
-            } else {
-                map.removeLayer(mediumAirportsLayer);
-            }
+        document.getElementById('toggleMarkersButton').addEventListener('click', () => {
+            markersSupplementaireVisible = !markersSupplementaireVisible;
+            chargerMarqueurs();
         });
 
-        document.getElementById("toggleIndustriesButton").addEventListener("click", () => {
-            industriesVisible = !industriesVisible;
-            if (industriesVisible) {
-                map.addLayer(industriesLayer);
-            } else {
-                map.removeLayer(industriesLayer);
-            }
+        const measureControl = new L.Control.Measure({
+            primaryLengthUnit: "nauticalMiles",
+            secondaryLengthUnit: "kilometers",
+            activeColor: "#ff0000",
+            completedColor: "#00ff00",
+            position: "topleft"
         });
+        map.addControl(measureControl);
 
-        document.getElementById("toggleAirbusSitesButton").addEventListener("click", () => {
-            airbusVisible = !airbusVisible;
-            if (airbusVisible) {
-                map.addLayer(airbusLayer);
-            } else {
-                map.removeLayer(airbusLayer);
-            }
-        });
-
-        chargerMarqueurs(largeAirportsURL, largeAirportsLayer, "large");
-        chargerMarqueurs(mediumAirportsURL, mediumAirportsLayer, "medium");
-        chargerMarqueurs(mediumAirportsURL, industriesLayer, "industry");
-        chargerMarqueurs(mediumAirportsURL, airbusLayer, "airbus");
-
+        chargerMarqueurs();
     </script>
 </body>
 </html>
