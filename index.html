@@ -126,19 +126,73 @@
             });
         }
 
+        // Afficher/Masquer les filtres des industries
         document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
             document.getElementById('industryFilters').style.display = 
                 document.getElementById('industryFilters').style.display === 'none' ? 'block' : 'none';
         });
 
+        // Ajouter/retirer les couches des industries
         document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
                 if (this.checked) {
                     industryLayers[this.dataset.category].addTo(map);
                 } else {
-                    map.removeLayer(industryLayers[this.dataset.category]);
+                    if (map.hasLayer(industryLayers[this.dataset.category])) {
+                        map.removeLayer(industryLayers[this.dataset.category]);
+                    }
                 }
             });
+        });
+
+        // Boutons pour afficher/masquer les couches
+        document.getElementById('toggleAirbusButton').addEventListener('click', () => {
+            if (map.hasLayer(layers["Airbus"])) {
+                map.removeLayer(layers["Airbus"]);
+            } else {
+                map.addLayer(layers["Airbus"]);
+            }
+        });
+
+        document.getElementById('togglePrincipauxButton').addEventListener('click', () => {
+            if (map.hasLayer(layers["Aéroports principaux"])) {
+                map.removeLayer(layers["Aéroports principaux"]);
+            } else {
+                map.addLayer(layers["Aéroports principaux"]);
+            }
+        });
+
+        document.getElementById('toggleSecondairesButton').addEventListener('click', () => {
+            if (map.hasLayer(layers["Aéroports secondaires"])) {
+                map.removeLayer(layers["Aéroports secondaires"]);
+            } else {
+                map.addLayer(layers["Aéroports secondaires"]);
+            }
+        });
+
+        // Gestion des champs de saisie pour le départ et l'arrivée
+        document.getElementById('departure').addEventListener('click', function() {
+            this.style.display = 'none';
+            document.getElementById('departureInput').style.display = 'block';
+            document.getElementById('departureInput').focus();
+        });
+
+        document.getElementById('arrival').addEventListener('click', function() {
+            this.style.display = 'none';
+            document.getElementById('arrivalInput').style.display = 'block';
+            document.getElementById('arrivalInput').focus();
+        });
+
+        // Fonction pour générer le plan de vol
+        document.getElementById('generateLinkButton').addEventListener('click', () => {
+            const departure = document.getElementById('departureInput').value;
+            const arrival = document.getElementById('arrivalInput').value;
+            
+            if (departure && arrival) {
+                alert(`Plan de vol généré entre ${departure} et ${arrival}`);
+            } else {
+                alert("Veuillez sélectionner un aéroport de départ et d'arrivée.");
+            }
         });
     </script>
 </body>
