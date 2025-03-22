@@ -91,12 +91,12 @@
             try {
                 const reponse = await fetch(sheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1);
+                const lignes = texteCSV.split('\n').slice(1); // Enlever la première ligne de l'en-tête
 
-                markersLayer.clearLayers();
-                markersMediumLayer.clearLayers();
+                markersLayer.clearLayers(); // Effacer les anciens marqueurs principaux
+                markersMediumLayer.clearLayers(); // Effacer les anciens marqueurs Medium
 
-                // Marqueurs principaux
+                // Marqueurs principaux (Premières 17 lignes)
                 lignes.slice(0, 17).forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
@@ -162,7 +162,7 @@
         // Fonction pour afficher/masquer les marqueurs supplémentaires
         document.getElementById('toggleMediumButton').addEventListener('click', () => {
             markersSupplementaireVisible = !markersSupplementaireVisible;
-            chargerMarqueurs();
+            chargerMarqueurs(); // Recharger les marqueurs avec l'état mis à jour
         });
 
         // Fonction pour définir l'aéroport sélectionné
@@ -185,7 +185,7 @@
             }
         });
 
-        chargerMarqueurs();
+        chargerMarqueurs(); // Charger les marqueurs à l'initialisation
     </script>
 </body>
 </html>
