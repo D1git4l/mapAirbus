@@ -119,8 +119,8 @@
                             const colonnes = ligne.split(',');
                             if (colonnes.length >= 4) {
                                 const nom = colonnes[0].trim();
-                                const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                                const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                                const lat = parseFloat(colonnes[2].trim().replace(',', '.')); // Inverser les colonnes
+                                const lng = parseFloat(colonnes[1].trim().replace(',', '.')); // Inverser les colonnes
                                 const iconeUrl = colonnes[3].trim();
 
                                 if (!isNaN(lat) && !isNaN(lng)) {
