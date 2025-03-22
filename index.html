@@ -143,7 +143,7 @@
             const categories = new Set();
             rows.forEach(row => {
                 const cols = row.split(',');
-                if (cols[7]) categories.add(cols[7].trim()); // Colonne A pour les catégories
+                if (cols[7]) categories.add(cols[7].trim()); // Colonne H pour les catégories
             });
 
             // Afficher les catégories sous forme de cases à cocher
@@ -181,7 +181,7 @@
             
             if (departure && arrival) {
                 // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
-                const simBriefURL = `https://www.simbrief.com/home/index.php?origin=${departure}&destination=${arrival}`;
+                const simBriefURL = 'https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}';
                 window.open(simBriefURL, '_blank');
             } else {
                 alert("Veuillez sélectionner un aéroport de départ et d'arrivée.");
