@@ -29,10 +29,12 @@
     <div id="sidebar">
         <h2>Sélection des aéroports</h2>
         <div class="info-box">
-            Départ: <span id="departure">Non sélectionné</span>
+            Départ: <span id="departure" class="clickable">Non sélectionné</span>
+            <input type="text" id="departureInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <div class="info-box">
-            Arrivée: <span id="arrival">Non sélectionné</span>
+            Arrivée: <span id="arrival" class="clickable">Non sélectionné</span>
+            <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <button id="generateLinkButton">Générer le plan de vol</button>
     </div>
