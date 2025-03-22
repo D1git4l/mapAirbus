@@ -54,6 +54,14 @@
             color: blue;
             text-decoration: underline;
         }
+        .category-group {
+            margin-top: 20px;
+        }
+        .category-group h4 {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -91,6 +99,7 @@
         let departureMarker = null;
         let arrivalMarker = null;
         let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
+        let routeLine = null;  // Variable pour stocker la ligne tracée
 
         // URLs pour les fichiers CSV
         const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
@@ -160,13 +169,21 @@
             const distanceInNauticalMiles = distanceInKm * 0.53996; // Conversion en milles nautiques
 
             // Calcul du temps de vol en heures
-            const flightTimeInHours = distanceInKm / 800; // Vitesse de 800 km/h
+            const flightTimeInHours = distanceInKm / 600; // Vitesse de 800 km/h
             const flightTimeInMinutes = Math.round(flightTimeInHours * 60); // Convertir en minutes
 
             document.getElementById('distance').innerText = distanceInNauticalMiles.toFixed(2);
             document.getElementById('flightTime').innerText = (flightTimeInMinutes / 60).toFixed(2);
 
             document.getElementById('distanceBox').style.display = 'block';
+
+            // Si une ligne existe déjà, on la retire avant de dessiner la nouvelle
+            if (routeLine) {
+                map.removeLayer(routeLine);
+            }
+
+            // Tracer la ligne entre le Départ et l'Arrivée
+            routeLine = L.polyline([depCoords, arrCoords], {color: 'blue'}).addTo(map);
         }
 
         // Fonction pour récupérer les catégories à partir du Sheet (colonne H)
@@ -183,12 +200,36 @@
 
             console.log('Catégories chargées:', categories);
 
-            // Afficher les catégories sous forme de cases à cocher
-            const categoryCheckboxes = document.getElementById('categoryCheckboxes');
+            // Organiser les catégories par premier mot
+            const categoryGroups = {};
             categories.forEach(category => {
-                const label = document.createElement('label');
-                label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
-                categoryCheckboxes.appendChild(label);
+                const firstWord = category.split(' ')[0];
+                if (!categoryGroups[firstWord]) {
+                    categoryGroups[firstWord] = [];
+                }
+                categoryGroups[firstWord].push(category);
+            });
+
+            // Créer l'HTML pour les catégories triées et espacées
+            const categoryCheckboxes = document.getElementById('categoryCheckboxes');
+            Object.keys(categoryGroups).sort().forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.classList.add('category-group');
+
+                // Ajouter un titre pour chaque groupe
+                const groupTitle = document.createElement('h4');
+                groupTitle.innerText = group;
+                groupDiv.appendChild(groupTitle);
+
+                // Ajouter les cases à cocher pour chaque catégorie du groupe
+                categoryGroups[group].forEach(category => {
+                    const label = document.createElement('label');
+                    label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
+                    groupDiv.appendChild(label);
+                });
+
+                // Ajouter chaque groupe au conteneur principal
+                categoryCheckboxes.appendChild(groupDiv);
             });
 
             // Ajouter l'événement de changement sur chaque case à cocher
@@ -246,31 +287,4 @@
         
         document.getElementById('arrival').addEventListener('click', () => {
             currentSelection = 'arrival';
-            document.getElementById('arrivalInput').style.display = 'block';
-            document.getElementById('departureInput').style.display = 'none';
-        });
-
-        // Permettre à l'utilisateur de saisir manuellement les valeurs de départ et d'arrivée
-        document.getElementById('departureInput').addEventListener('blur', (event) => {
-            document.getElementById('departure').innerText = event.target.value;
-            document.getElementById('departureInput').style.display = 'none';
-        });
-
-        document.getElementById('arrivalInput').addEventListener('blur', (event) => {
-            document.getElementById('arrival').innerText = event.target.value;
-            document.getElementById('arrivalInput').style.display = 'none';
-        });
-
-        // Réinitialiser les valeurs de départ et d'arrivée
-        document.getElementById('resetSelectionButton').addEventListener('click', () => {
-            document.getElementById('departure').innerText = 'Non sélectionné';
-            document.getElementById('arrival').innerText = 'Non sélectionné';
-            document.getElementById('distanceBox').style.display = 'none';
-            if (departureMarker) map.removeLayer(departureMarker);
-            if (arrivalMarker) map.removeLayer(arrivalMarker);
-            departureMarker = null;
-            arrivalMarker = null;
-        });
-    </script>
-</body>
-</html>
+            document.getElementBy
