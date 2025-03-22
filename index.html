@@ -89,26 +89,20 @@
         const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
         // Fonction pour charger les marqueurs depuis les CSV
-        async function chargerMarqueurs(sheetURL, category, infoColumns = [4, 5, 6], referenceColumn = 7) {
+        async function chargerMarqueurs(sheetURL, category) {
             const response = await fetch(sheetURL);
             const text = await response.text();
             const rows = text.split('\n').slice(1); // Ignorer la première ligne
 
-            // Trier les données par la colonne de référence (colonne H - index 7)
-            const sortedRows = rows.sort((a, b) => {
-                const refA = a.split(',')[referenceColumn].trim();
-                const refB = b.split(',')[referenceColumn].trim();
-                return refA.localeCompare(refB);  // Trier par ordre alphabétique
-            });
+            layers[category] = L.layerGroup().addTo(map); // Créer un layer spécifique pour chaque catégorie
 
-            layers[category] = L.layerGroup(); // Créer un layer spécifique pour chaque catégorie
-            sortedRows.forEach(row => {
+            rows.forEach(row => {
                 const cols = row.split(',');
                 const lat = parseFloat(cols[1].trim().replace(',', '.'));
                 const lng = parseFloat(cols[2].trim().replace(',', '.'));
                 const name = cols[0].trim();
                 const iconURL = cols[3].trim();  // Colonne D pour l'icône
-                const info = infoColumns.map(i => cols[i] ? cols[i].trim() : '').join(' ');
+                const info = cols.slice(4, 7).map(i => cols[i] ? cols[i].trim() : '').join(' '); // Colonnes E, F, G
 
                 if (!isNaN(lat) && !isNaN(lng)) {
                     // Créer une icône personnalisée
@@ -134,7 +128,7 @@
             });
         }
 
-        // Fonction pour récupérer les catégories à partir du Sheet 1 (colonne H)
+        // Fonction pour récupérer les catégories à partir du Sheet 2 (colonne H)
         async function chargerCategories(sheetURL) {
             const response = await fetch(sheetURL);
             const text = await response.text();
@@ -146,41 +140,51 @@
                 if (cols[7]) categories.add(cols[7].trim()); // Colonne H pour les catégories
             });
 
+            console.log('Catégories chargées:', categories);
+
+            // Trier les catégories par ordre alphabétique
+            const sortedCategories = Array.from(categories).sort();
+
             // Afficher les catégories sous forme de cases à cocher
             const categoryCheckboxes = document.getElementById('categoryCheckboxes');
-            categories.forEach(category => {
+            categoryCheckboxes.innerHTML = ''; // Réinitialiser les cases à cocher avant de les ajouter
+
+            sortedCategories.forEach(category => {
                 const label = document.createElement('label');
                 label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
                 categoryCheckboxes.appendChild(label);
             });
+
+            // Ajouter l'événement de changement sur chaque case à cocher
+            document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const category = this.value;
+                    console.log(`Case cochée pour la catégorie: ${category}`);
+
+                    if (this.checked) {
+                        // Si la case est cochée, ajouter le layer
+                        if (layers[category]) {
+                            console.log(`Ajout du layer pour ${category}`);
+                            map.addLayer(layers[category]);
+                        }
+                    } else {
+                        // Si la case est décochée, retirer le layer
+                        if (layers[category]) {
+                            console.log(`Retrait du layer pour ${category}`);
+                            map.removeLayer(layers[category]);
+                        }
+                    }
+                });
+            });
+
+            // Charger les marqueurs pour les catégories
+            sortedCategories.forEach(category => {
+                chargerMarqueurs(sheetURL1, category);
+            });
         }
 
-        // Charger les catégories du Sheet 1
-        chargerCategories(sheetURL1);
-
-        // Charger les données pour les différentes catégories
-        chargerMarqueurs(sheetURL1, "Airbus");
-        chargerMarqueurs(sheetURL1, "Aéroports principaux");
-
-        // Charger les catégories du Sheet 2
+        // Appeler la fonction pour charger les catégories
         chargerCategories(sheetURL2);
-
-        // Charger les données pour les différentes catégories
-        chargerMarqueurs(sheetURL2, "Aéroports principaux");
-
-        // Fonction pour afficher/masquer les layers selon la catégorie
-        document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const category = this.value;
-                if (this.checked) {
-                    // Si la case est cochée, ajouter le layer
-                    if (layers[category]) map.addLayer(layers[category]);
-                } else {
-                    // Si la case est décochée, retirer le layer
-                    if (layers[category]) map.removeLayer(layers[category]);
-                }
-            });
-        });
 
         // Fonction pour générer le plan de vol (SimBrief)
         document.getElementById('generateLinkButton').addEventListener('click', () => {
