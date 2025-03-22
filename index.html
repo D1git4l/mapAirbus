@@ -41,6 +41,11 @@
         #toggleMarkersButton:hover, #generateLinkButton:hover {
             background: #0056b3;
         }
+        select {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
         input[type="text"] {
             width: 100%;
             padding: 5px;
@@ -61,7 +66,26 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <button id="generateLinkButton">Générer le plan de vol</button>
-        <button id="toggleMarkersButton">Aéroports principaux</button>
+        
+        <!-- Liste déroulante pour la feuille Industrie -->
+        <div id="industrieSidebar" class="info-box">
+            <label for="categorieSelect">Sélectionner une catégorie :</label>
+            <select id="categorieSelect">
+                <option value="all">Toutes les catégories</option>
+                <option value="viande">Viande (Lignes 2 à 6)</option>
+                <option value="cereal">Céréal (Lignes 7 à 9)</option>
+                <option value="farine">Farine (Lignes 10 à 12)</option>
+                <option value="complement">Complément (Lignes 13 à 15)</option>
+                <option value="plastique">Plastique (Lignes 16 à 18)</option>
+                <option value="usine">Usine (Lignes 19 à 21)</option>
+                <option value="depot">Dépot (Lignes 22 à 23)</option>
+                <option value="hub">Hub (Lignes 24 à 27)</option>
+                <option value="sirop">Sirop (Lignes 28 à 35)</option>
+            </select>
+        </div>
+        
+        <!-- Bouton pour afficher les autres marqueurs -->
+        <button id="toggleMarkersButton">Afficher/Masquer autres marqueurs</button>
     </div>
 
     <!-- Carte -->
@@ -76,25 +100,40 @@
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
-        const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
+        const industrieSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=78117314&single=true&output=csv';
+        const otherSheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=1204191404&single=true&output=csv';
 
-        let markersLayer = L.layerGroup().addTo(map);
+        // Groupes de marqueurs
+        let markersIndustrieLayer = L.layerGroup().addTo(map);
+        let markersOtherLayer = L.layerGroup().addTo(map);
         let markersSupplementaireLayer = L.layerGroup().addTo(map);
         let markersSupplementaireVisible = false;
 
-        let activeInput = null; // Pour savoir quelle case (départ ou arrivée) est active
-
-        async function chargerMarqueurs() {
+        async function chargerMarqueursIndustrie() {
             try {
-                const reponse = await fetch(sheetURL);
+                const reponse = await fetch(industrieSheetURL);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1);
+                const lignes = texteCSV.split('\n').slice(1); // Ignorer l'en-tête
 
-                markersLayer.clearLayers();
-                markersSupplementaireLayer.clearLayers();
+                markersIndustrieLayer.clearLayers();
 
-                const lignesPrincipales = lignes.slice(0, 17);
-                lignesPrincipales.forEach(ligne => {
+                const selectedCategory = document.getElementById('categorieSelect').value;
+                let rangeLignes = [];
+                switch (selectedCategory) {
+                    case 'viande': rangeLignes = lignes.slice(1, 6); break;
+                    case 'cereal': rangeLignes = lignes.slice(6, 9); break;
+                    case 'farine': rangeLignes = lignes.slice(9, 12); break;
+                    case 'complement': rangeLignes = lignes.slice(12, 15); break;
+                    case 'plastique': rangeLignes = lignes.slice(15, 18); break;
+                    case 'usine': rangeLignes = lignes.slice(18, 21); break;
+                    case 'depot': rangeLignes = lignes.slice(21, 23); break;
+                    case 'hub': rangeLignes = lignes.slice(23, 27); break;
+                    case 'sirop': rangeLignes = lignes.slice(27, 35); break;
+                    case 'all':
+                    default: rangeLignes = lignes; break;
+                }
+
+                rangeLignes.forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
                         const nom = colonnes[0].trim();
@@ -112,119 +151,67 @@
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
                                 .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            marker.on('click', () => setAirport(nom, colonnes[4]?.trim())); // Modifier en cliquant
-                            markersLayer.addLayer(marker);
+                            markersIndustrieLayer.addLayer(marker);
                         }
                     }
                 });
-
-                if (markersSupplementaireVisible) {
-                    const lignesSupplementaires = lignes.slice(17, 500);
-                    lignesSupplementaires.forEach((ligne, index) => {
-                        const colonnes = ligne.split(',');
-                        if (colonnes.length >= 4) {
-                            const nom = colonnes[0].trim();
-                            let lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                            let lng = parseFloat(colonnes[2].trim().replace(',', '.'));
-                            const iconeUrl = colonnes[3].trim();
-
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                const offset = 0.001 * (index % 2 === 0 ? 1 : -1);
-                                lat += offset;
-                                lng += offset;
-
-                                const iconePersonnalisee = L.icon({
-                                    iconUrl: iconeUrl,
-                                    iconSize: [25, 25],
-                                    iconAnchor: [16, 32],
-                                    popupAnchor: [0, -32]
-                                });
-
-                                const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                    .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                                markersSupplementaireLayer.addLayer(marker);
-                            }
-                        }
-                    });
-                }
-
             } catch (erreur) {
-                console.error('Erreur lors du chargement des données CSV :', erreur);
+                console.error('Erreur lors du chargement des données CSV pour la feuille Industrie :', erreur);
             }
         }
 
-        // Fonction pour définir l'aéroport actif (Départ ou Arrivée)
-        function setAirport(name, oaci) {
-            if (activeInput === 'departure') {
-                document.getElementById('departure').textContent = name;
-            } else if (activeInput === 'arrival') {
-                document.getElementById('arrival').textContent = name;
+        // Fonction pour charger et afficher les marqueurs pour les autres feuilles
+        async function chargerMarqueursOther() {
+            try {
+                const reponse = await fetch(otherSheetURL);
+                const texteCSV = await reponse.text();
+                const lignes = texteCSV.split('\n').slice(1); // Ignorer l'en-tête
+
+                markersOtherLayer.clearLayers();
+
+                lignes.forEach(ligne => {
+                    const colonnes = ligne.split(',');
+                    if (colonnes.length >= 4) {
+                        const nom = colonnes[0].trim();
+                        const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
+                        const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
+                        const iconeUrl = colonnes[3].trim();
+
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            const iconePersonnalisee = L.icon({
+                                iconUrl: iconeUrl,
+                                iconSize: [50, 50],
+                                iconAnchor: [16, 32],
+                                popupAnchor: [0, -32]
+                            });
+
+                            const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
+                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
+                            markersOtherLayer.addLayer(marker);
+                        }
+                    }
+                });
+            } catch (erreur) {
+                console.error('Erreur lors du chargement des données CSV pour les autres feuilles :', erreur);
             }
-            hideInput(); // Cacher l'input après la sélection
         }
 
-        // Afficher l'input pour modifier manuellement ou sélection automatique via un clic
-        function showInput(inputType) {
-            activeInput = inputType;
-            if (inputType === 'departure') {
-                document.getElementById('departureInput').style.display = 'block';
-                document.getElementById('departure').style.display = 'none';
-            } else if (inputType === 'arrival') {
-                document.getElementById('arrivalInput').style.display = 'block';
-                document.getElementById('arrival').style.display = 'none';
-            }
-        }
+        // Appels initiale pour charger les marqueurs
+        chargerMarqueursIndustrie();
+        chargerMarqueursOther();
 
-        // Masquer l'input lorsque la saisie est terminée
-        function hideInput() {
-            document.getElementById('departureInput').style.display = 'none';
-            document.getElementById('arrivalInput').style.display = 'none';
-            document.getElementById('departure').style.display = 'inline';
-            document.getElementById('arrival').style.display = 'inline';
-        }
+        // Mettre à jour les marqueurs pour la feuille Industrie quand la catégorie change
+        document.getElementById('categorieSelect').addEventListener('change', chargerMarqueursIndustrie);
 
-        // Ajouter un événement pour la saisie manuelle des aéroports
-        document.getElementById('departure').addEventListener('click', () => showInput('departure'));
-        document.getElementById('arrival').addEventListener('click', () => showInput('arrival'));
-
-        // Ajouter la saisie manuelle
-        document.getElementById('departureInput').addEventListener('change', (e) => {
-            document.getElementById('departure').textContent = e.target.value;
-            hideInput();
-        });
-
-        document.getElementById('arrivalInput').addEventListener('change', (e) => {
-            document.getElementById('arrival').textContent = e.target.value;
-            hideInput();
-        });
-
-        document.getElementById('generateLinkButton').addEventListener('click', () => {
-            const departureText = document.getElementById('departure').textContent;
-            const arrivalText = document.getElementById('arrival').textContent;
-
-            if (departureText !== 'Non sélectionné' && arrivalText !== 'Non sélectionné') {
-                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departureText}&dest=${arrivalText}`;
-                window.open(simbriefURL, '_blank');
-            } else {
-                alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
-            }
-        });
-
+        // Afficher ou masquer les marqueurs des autres feuilles
         document.getElementById('toggleMarkersButton').addEventListener('click', () => {
             markersSupplementaireVisible = !markersSupplementaireVisible;
-            chargerMarqueurs();
+            if (markersSupplementaireVisible) {
+                markersSupplementaireLayer.addTo(map);
+            } else {
+                markersSupplementaireLayer.removeFrom(map);
+            }
         });
-
-        const measureControl = new L.Control.Measure({
-            primaryLengthUnit: "nauticalMiles",
-            secondaryLengthUnit: "kilometers",
-            activeColor: "#ff0000",
-            completedColor: "#00ff00",
-            position: "topleft"
-        });
-        map.addControl(measureControl);
-
-        chargerMarqueurs();
     </script>
 </body>
 </html>
