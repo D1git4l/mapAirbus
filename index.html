@@ -99,12 +99,34 @@
                 const lat = parseFloat(cols[1].trim().replace(',', '.'));
                 const lng = parseFloat(cols[2].trim().replace(',', '.'));
                 const name = cols[0].trim();
+                const iconURL = cols[3].trim();  // Colonne D pour l'icône
                 const info = infoColumns.map(i => cols[i] ? cols[i].trim() : '').join(' ');
 
                 if (!isNaN(lat) && !isNaN(lng)) {
-                    const marker = L.marker([lat, lng])
+                    // Créer une icône personnalisée
+                    const icon = L.icon({
+                        iconUrl: iconURL,
+                        iconSize: [30, 30],  // Taille de l'icône (ajustez si nécessaire)
+                        iconAnchor: [15, 30], // Position de l'ancre de l'icône
+                    });
+
+                    const marker = L.marker([lat, lng], { icon: icon })
                         .bindPopup(`<strong>${name}</strong><br>${info}`);
                     layers[category].addLayer(marker);
+
+                    // Ajouter un gestionnaire de clic sur chaque marqueur
+                    marker.on('click', function() {
+                        // Mettre à jour les champs de départ ou d'arrivée
+                        if (!document.getElementById('departureInput').style.display && !document.getElementById('arrivalInput').style.display) {
+                            if (!document.getElementById('departure').innerText || document.getElementById('departure').innerText === 'Non sélectionné') {
+                                document.getElementById('departure').innerText = name;
+                                document.getElementById('departureInput').style.display = 'none';
+                            } else {
+                                document.getElementById('arrival').innerText = name;
+                                document.getElementById('arrivalInput').style.display = 'none';
+                            }
+                        }
+                    });
                 }
             });
         }
@@ -125,12 +147,33 @@
                 const lat = parseFloat(cols[1].trim().replace(',', '.'));
                 const lng = parseFloat(cols[2].trim().replace(',', '.'));
                 const name = cols[0].trim();
+                const iconURL = cols[3].trim(); // Icône à utiliser pour l'industrie
                 const info = [cols[4], cols[5], cols[6]].map(i => i ? i.trim() : '').join(' ');
 
                 if (!isNaN(lat) && !isNaN(lng)) {
-                    const marker = L.marker([lat, lng])
+                    const icon = L.icon({
+                        iconUrl: iconURL,
+                        iconSize: [30, 30],  // Taille de l'icône
+                        iconAnchor: [15, 30],
+                    });
+
+                    const marker = L.marker([lat, lng], { icon: icon })
                         .bindPopup(`<strong>${name}</strong><br>${info}`);
-                    layers["Industries"].addLayer(marker); // Ajouter tous les marqueurs dans la même couche "Industries"
+                    layers["Industries"].addLayer(marker);
+
+                    // Ajouter un gestionnaire de clic sur chaque marqueur
+                    marker.on('click', function() {
+                        // Mettre à jour les champs de départ ou d'arrivée
+                        if (!document.getElementById('departureInput').style.display && !document.getElementById('arrivalInput').style.display) {
+                            if (!document.getElementById('departure').innerText || document.getElementById('departure').innerText === 'Non sélectionné') {
+                                document.getElementById('departure').innerText = name;
+                                document.getElementById('departureInput').style.display = 'none';
+                            } else {
+                                document.getElementById('arrival').innerText = name;
+                                document.getElementById('arrivalInput').style.display = 'none';
+                            }
+                        }
+                    });
                 }
             });
         }
@@ -184,13 +227,15 @@
             document.getElementById('arrivalInput').focus();
         });
 
-        // Fonction pour générer le plan de vol
+        // Fonction pour générer le plan de vol (Simbrief)
         document.getElementById('generateLinkButton').addEventListener('click', () => {
-            const departure = document.getElementById('departureInput').value;
-            const arrival = document.getElementById('arrivalInput').value;
+            const departure = document.getElementById('departure').innerText;
+            const arrival = document.getElementById('arrival').innerText;
             
             if (departure && arrival) {
-                alert(`Plan de vol généré entre ${departure} et ${arrival}`);
+                // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
+                const simBriefURL = `https://www.simbrief.com/home/index.php?origin=${departure}&destination=${arrival}`;
+                window.open(simBriefURL, '_blank');
             } else {
                 alert("Veuillez sélectionner un aéroport de départ et d'arrivée.");
             }
