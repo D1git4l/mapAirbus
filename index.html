@@ -89,10 +89,10 @@
         const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?gid=241660980&single=true&output=csv';
 
         // Fonction pour charger les marqueurs depuis les CSV
-        async function chargerMarqueurs(sheetURL, category, rangeStart, rangeEnd, infoColumns = [4, 5, 6], referenceColumn = 7) {
+        async function chargerMarqueurs(sheetURL, category, infoColumns = [4, 5, 6], referenceColumn = 7) {
             const response = await fetch(sheetURL);
             const text = await response.text();
-            const rows = text.split('\n').slice(rangeStart, rangeEnd);
+            const rows = text.split('\n').slice(1); // Ignorer la première ligne
 
             // Trier les données par la colonne de référence (colonne H - index 7)
             const sortedRows = rows.sort((a, b) => {
@@ -134,9 +134,9 @@
             });
         }
 
-        // Fonction pour récupérer les catégories à partir du Sheet 2
-        async function chargerCategories() {
-            const response = await fetch(sheetURL2);
+        // Fonction pour récupérer les catégories à partir du Sheet 1 (colonne H)
+        async function chargerCategories(sheetURL) {
+            const response = await fetch(sheetURL);
             const text = await response.text();
             const rows = text.split('\n').slice(1); // Ignorer la première ligne
 
@@ -155,12 +155,18 @@
             });
         }
 
-        // Appeler la fonction pour charger les catégories
-        chargerCategories();
+        // Charger les catégories du Sheet 1
+        chargerCategories(sheetURL1);
 
-        // Charger les données pour les différentes catégories (exemples)
-        chargerMarqueurs(sheetURL1, "Airbus", 1, 18); // Exemple pour charger les données Airbus
-        chargerMarqueurs(sheetURL1, "Aéroports principaux", 18, 499); // Exemple pour charger les aéroports principaux
+        // Charger les données pour les différentes catégories
+        chargerMarqueurs(sheetURL1, "Airbus");
+        chargerMarqueurs(sheetURL1, "Aéroports principaux");
+
+        // Charger les catégories du Sheet 2
+        chargerCategories(sheetURL2);
+
+        // Charger les données pour les différentes catégories
+        chargerMarqueurs(sheetURL2, "Aéroports principaux");
 
         // Fonction pour afficher/masquer les layers selon la catégorie
         document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
@@ -181,7 +187,7 @@
             
             if (departure && arrival) {
                 // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
-                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;;
+                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
                 window.open(simBriefURL, '_blank');
             } else {
                 alert("Veuillez sélectionner un aéroport de départ et d'arrivée.");
