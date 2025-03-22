@@ -18,6 +18,7 @@
             background: #f4f4f4;
             padding: 10px;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
         }
         #map {
             flex-grow: 1;
@@ -41,6 +42,13 @@
         .toggle-button:hover {
             background: #0056b3;
         }
+        .checkbox-group {
+            margin-top: 20px;
+        }
+        .checkbox-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -55,13 +63,15 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
-        <div style="margin-top: 15px;"></div>
-        <button id="toggleAirbusButton" class="toggle-button">Airbus</button>
-        <button id="togglePrincipauxButton" class="toggle-button">Aéroports principaux</button>
-        <button id="toggleSecondairesButton" class="toggle-button">Aéroports secondaires</button>
-        <button id="toggleIndustriesButton" class="toggle-button">Industries</button>
+        
+        <h3>Afficher par mois</h3>
+        <div id="monthCheckboxes" class="checkbox-group"></div>
+
+        <h3>Afficher par catégorie</h3>
+        <div id="categoryCheckboxes" class="checkbox-group"></div>
     </div>
     <div id="map"></div>
+
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         const map = L.map('map').setView([20, 0], 2);
@@ -69,12 +79,8 @@
             attribution: '&copy; OpenStreetMap contributeurs'
         }).addTo(map);
 
-        const layers = {
-            "Airbus": L.layerGroup().addTo(map),
-            "Aéroports principaux": L.layerGroup(),
-            "Aéroports secondaires": L.layerGroup(),
-            "Industries": L.layerGroup()  // Tous les marqueurs Industrie seront dans un seul groupe
-        };
+        const layers = {}; // Chaque catégorie et mois sera un layer distinct
+        let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
 
         // URLs pour les fichiers CSV
         const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
@@ -93,7 +99,7 @@
                 return refA.localeCompare(refB);  // Trier par ordre alphabétique
             });
 
-            layers[category].clearLayers();
+            layers[category] = L.layerGroup().addTo(map); // Créer un layer spécifique pour chaque catégorie
             sortedRows.forEach(row => {
                 const cols = row.split(',');
                 const lat = parseFloat(cols[1].trim().replace(',', '.'));
@@ -116,10 +122,9 @@
 
                     // Ajouter un gestionnaire de clic sur chaque marqueur
                     marker.on('click', function() {
-                        // Mettre à jour les champs de départ ou d'arrivée
-                        if (!document.getElementById('departure').innerText || document.getElementById('departure').innerText === 'Non sélectionné') {
+                        if (currentSelection === 'departure') {
                             document.getElementById('departure').innerText = name;
-                        } else if (!document.getElementById('arrival').innerText || document.getElementById('arrival').innerText === 'Non sélectionné') {
+                        } else if (currentSelection === 'arrival') {
                             document.getElementById('arrival').innerText = name;
                         }
                     });
@@ -127,83 +132,54 @@
             });
         }
 
-        // Charger les données pour les différentes catégories
-        chargerMarqueurs(sheetURL1, "Airbus", 1, 18); // Charger les données Airbus
-        chargerMarqueurs(sheetURL1, "Aéroports principaux", 18, 499); // Charger les aéroports principaux
-        chargerMarqueurs(sheetURL2, "Aéroports secondaires", 1, 4690); // Charger les aéroports secondaires
-
-        // Charger les industries (regroupées ensemble) et les ajouter à la couche "Industries"
-        async function chargerIndustries() {
+        // Fonction pour récupérer les mois et les catégories à partir du Sheet 2
+        async function chargerMoisEtCategories() {
             const response = await fetch(sheetURL2);
             const text = await response.text();
-            const rows = text.split('\n').slice(4691, 4724); // Récupérer les lignes des industries
+            const rows = text.split('\n').slice(1); // Ignorer la première ligne
 
+            const months = new Set();
+            const categories = new Set();
             rows.forEach(row => {
                 const cols = row.split(',');
-                const lat = parseFloat(cols[1].trim().replace(',', '.'));
-                const lng = parseFloat(cols[2].trim().replace(',', '.'));
-                const name = cols[0].trim();
-                const iconURL = cols[3].trim(); // Icône à utiliser pour l'industrie
-                const info = [cols[4], cols[5], cols[6]].map(i => i ? i.trim() : '').join(' ');
+                if (cols[7]) months.add(cols[7].trim()); // Colonne H pour les mois
+                if (cols[0]) categories.add(cols[0].trim()); // Colonne A pour les catégories
+            });
 
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    const icon = L.icon({
-                        iconUrl: iconURL,
-                        iconSize: [30, 30],  // Taille de l'icône
-                        iconAnchor: [15, 30],
-                    });
+            // Afficher les mois sous forme de cases à cocher
+            const monthCheckboxes = document.getElementById('monthCheckboxes');
+            months.forEach(month => {
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" class="monthCheckbox" value="${month}"> ${month}`;
+                monthCheckboxes.appendChild(label);
+            });
 
-                    const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(`<strong>${name}</strong><br>${info}`);
-                    layers["Industries"].addLayer(marker);
-
-                    // Ajouter un gestionnaire de clic sur chaque marqueur
-                    marker.on('click', function() {
-                        // Mettre à jour les champs de départ ou d'arrivée
-                        if (!document.getElementById('departure').innerText || document.getElementById('departure').innerText === 'Non sélectionné') {
-                            document.getElementById('departure').innerText = name;
-                        } else if (!document.getElementById('arrival').innerText || document.getElementById('arrival').innerText === 'Non sélectionné') {
-                            document.getElementById('arrival').innerText = name;
-                        }
-                    });
-                }
+            // Afficher les catégories sous forme de cases à cocher
+            const categoryCheckboxes = document.getElementById('categoryCheckboxes');
+            categories.forEach(category => {
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
+                categoryCheckboxes.appendChild(label);
             });
         }
 
-        // Appel pour charger les industries
-        chargerIndustries();
+        // Appeler la fonction pour charger les mois et catégories
+        chargerMoisEtCategories();
 
-        // Boutons pour afficher/masquer les couches
-        document.getElementById('toggleAirbusButton').addEventListener('click', () => {
-            if (map.hasLayer(layers["Airbus"])) {
-                map.removeLayer(layers["Airbus"]);
-            } else {
-                map.addLayer(layers["Airbus"]);
-            }
-        });
+        // Charger les données pour les différentes catégories (exemples)
+        chargerMarqueurs(sheetURL1, "Airbus", 1, 18); // Exemple pour charger les données Airbus
+        chargerMarqueurs(sheetURL1, "Aéroports principaux", 18, 499); // Exemple pour charger les aéroports principaux
 
-        document.getElementById('togglePrincipauxButton').addEventListener('click', () => {
-            if (map.hasLayer(layers["Aéroports principaux"])) {
-                map.removeLayer(layers["Aéroports principaux"]);
-            } else {
-                map.addLayer(layers["Aéroports principaux"]);
-            }
-        });
-
-        document.getElementById('toggleSecondairesButton').addEventListener('click', () => {
-            if (map.hasLayer(layers["Aéroports secondaires"])) {
-                map.removeLayer(layers["Aéroports secondaires"]);
-            } else {
-                map.addLayer(layers["Aéroports secondaires"]);
-            }
-        });
-
-        document.getElementById('toggleIndustriesButton').addEventListener('click', () => {
-            if (map.hasLayer(layers["Industries"])) {
-                map.removeLayer(layers["Industries"]);
-            } else {
-                map.addLayer(layers["Industries"]);
-            }
+        // Fonction pour afficher/masquer les layers selon la catégorie ou le mois
+        document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const category = this.value;
+                if (this.checked) {
+                    if (layers[category]) map.addLayer(layers[category]);
+                } else {
+                    if (layers[category]) map.removeLayer(layers[category]);
+                }
+            });
         });
 
         // Fonction pour générer le plan de vol (SimBrief)
@@ -219,7 +195,16 @@
                 alert("Veuillez sélectionner un aéroport de départ et d'arrivée.");
             }
         });
+
+        // Gérer la sélection de départ et d'arrivée
+        document.getElementById('departure').addEventListener('click', () => {
+            currentSelection = 'departure';
+        });
+        
+        document.getElementById('arrival').addEventListener('click', () => {
+            currentSelection = 'arrival';
+        });
+
     </script>
 </body>
 </html>
-
