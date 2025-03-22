@@ -143,7 +143,7 @@
             const categories = new Set();
             rows.forEach(row => {
                 const cols = row.split(',');
-                if (cols[0]) categories.add(cols[0].trim()); // Colonne A pour les catégories
+                if (cols[7]) categories.add(cols[7].trim()); // Colonne A pour les catégories
             });
 
             // Afficher les catégories sous forme de cases à cocher
