@@ -29,7 +29,7 @@
             background: white;
             border: 1px solid #ccc;
         }
-        #generateLinkButton, #toggleMarkersButton, #toggleMediumButton {
+        #generateLinkButton, #toggleMarkersButton, #toggleMediumButton, #clearSelectionButton {
             background: #007BFF;
             color: white;
             padding: 10px;
@@ -38,7 +38,7 @@
             width: 100%;
             margin-top: 5px;
         }
-        #toggleMarkersButton:hover, #generateLinkButton:hover, #toggleMediumButton:hover {
+        #toggleMarkersButton:hover, #generateLinkButton:hover, #toggleMediumButton:hover, #clearSelectionButton:hover {
             background: #0056b3;
         }
         input[type="text"] {
@@ -62,6 +62,7 @@
         <button id="generateLinkButton">Générer le plan de vol</button>
         <button id="toggleMarkersButton">Aéroports principaux</button>
         <button id="toggleMediumButton">Aéroport Medium</button>
+        <button id="clearSelectionButton">Effacer la sélection</button>
     </div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -82,22 +83,25 @@
         map.addControl(measureControl);
 
         const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?output=csv';
+        const sheetMediumURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRrK9WOo7izCpLFpXSG2oW0XKMO-uFO2cWmiZ-p4AFsj3n2x4SGvZltXtg8M49pZNpd2I9kEgstzPlw/pub?output=csv&sheet=Medium';
 
         let markersLayer = L.layerGroup().addTo(map);
-        let markersMediumLayer = L.layerGroup().addTo(map);
+        let markersMediumLayer = L.layerGroup();
         let markersSupplementaireVisible = false;
+        let allMarkers = [];
 
-        async function chargerMarqueurs() {
+        async function chargerMarqueurs(url, isMedium = false) {
             try {
-                const reponse = await fetch(sheetURL);
+                const reponse = await fetch(url);
                 const texteCSV = await reponse.text();
-                const lignes = texteCSV.split('\n').slice(1); // Enlever la première ligne de l'en-tête
+                const lignes = texteCSV.split('\n').slice(1);
 
-                markersLayer.clearLayers(); // Effacer les anciens marqueurs principaux
-                markersMediumLayer.clearLayers(); // Effacer les anciens marqueurs Medium
+                const layerToAdd = isMedium ? markersMediumLayer : markersLayer;
+                if (!isMedium) {
+                    layerToAdd.clearLayers();
+                }
 
-                // Marqueurs principaux (Premières 17 lignes)
-                lignes.slice(0, 17).forEach(ligne => {
+                lignes.forEach(ligne => {
                     const colonnes = ligne.split(',');
                     if (colonnes.length >= 4) {
                         const nom = colonnes[0].trim();
@@ -113,64 +117,45 @@
                                 popupAnchor: [0, -32]
                             });
 
+                            const popupContent = isMedium ? `
+                                <strong>${nom}</strong><br>
+                                Latitude : ${lat}, Longitude : ${lng}<br>
+                                <strong>Info E:</strong> ${colonnes[4]?.trim() || 'N/A'}<br>
+                                <strong>Info F:</strong> ${colonnes[5]?.trim() || 'N/A'}<br>
+                                <strong>Info G:</strong> ${colonnes[6]?.trim() || 'N/A'}
+                            ` : `
+                                <strong>${nom}</strong><br>
+                                Latitude : ${lat}, Longitude : ${lng}
+                            `;
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>Latitude : ${lat}, Longitude : ${lng}`);
-                            markersLayer.addLayer(marker);
+                                .bindPopup(popupContent);
+                            layerToAdd.addLayer(marker);
+                            allMarkers.push(marker);
                         }
                     }
                 });
-
-                // Marqueurs supplémentaires (Aéroport Medium)
-                if (markersSupplementaireVisible) {
-                    lignes.slice(17).forEach(ligne => {
-                        const colonnes = ligne.split(',');
-                        if (colonnes.length >= 7) {
-                            const nom = colonnes[0].trim();
-                            const lat = parseFloat(colonnes[1].trim().replace(',', '.'));
-                            const lng = parseFloat(colonnes[2].trim().replace(',', '.'));
-                            const iconeUrl = colonnes[3].trim();
-                            const infoE = colonnes[4].trim();  // Info colonne E
-                            const infoF = colonnes[5].trim();  // Info colonne F
-                            const infoG = colonnes[6].trim();  // Info colonne G
-
-                            if (!isNaN(lat) && !isNaN(lng)) {
-                                const iconePersonnalisee = L.icon({
-                                    iconUrl: iconeUrl,
-                                    iconSize: [50, 50],
-                                    iconAnchor: [16, 32],
-                                    popupAnchor: [0, -32]
-                                });
-
-                                const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                    .bindPopup(`
-                                        <strong>${nom}</strong><br>
-                                        Latitude : ${lat}, Longitude : ${lng}<br>
-                                        <strong>Info E:</strong> ${infoE}<br>
-                                        <strong>Info F:</strong> ${infoF}<br>
-                                        <strong>Info G:</strong> ${infoG}
-                                    `);
-                                markersMediumLayer.addLayer(marker);
-                            }
-                        }
-                    });
-                }
             } catch (erreur) {
                 console.error('Erreur lors du chargement des données CSV :', erreur);
             }
         }
 
-        // Fonction pour afficher/masquer les marqueurs supplémentaires
         document.getElementById('toggleMediumButton').addEventListener('click', () => {
             markersSupplementaireVisible = !markersSupplementaireVisible;
-            chargerMarqueurs(); // Recharger les marqueurs avec l'état mis à jour
+            if (markersSupplementaireVisible) {
+                chargerMarqueurs(sheetMediumURL, true);
+                markersMediumLayer.addTo(map);
+            } else {
+                markersMediumLayer.removeFrom(map);
+            }
         });
 
-        // Fonction pour définir l'aéroport sélectionné
         function setAirport(name) {
             if (document.getElementById('departure').textContent === 'Non sélectionné') {
                 document.getElementById('departure').textContent = name;
+                document.getElementById('departureInput').style.display = 'none';
             } else {
                 document.getElementById('arrival').textContent = name;
+                document.getElementById('arrivalInput').style.display = 'none';
             }
         }
 
@@ -178,14 +163,9 @@
             const departure = document.getElementById('departure').textContent;
             const arrival = document.getElementById('arrival').textContent;
             if (departure !== 'Non sélectionné' && arrival !== 'Non sélectionné') {
-                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=<span class="math-inline">\{departure\}&dest\=</span>{arrival}`;
                 window.open(simbriefURL, '_blank');
             } else {
                 alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
             }
         });
-
-        chargerMarqueurs(); // Charger les marqueurs à l'initialisation
-    </script>
-</body>
-</html>
