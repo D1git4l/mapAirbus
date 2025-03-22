@@ -68,14 +68,13 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
+        <button id="resetSelectionButton" class="toggle-button">Réinitialiser les aéroports</button>
+        <div id="distanceBox" class="info-box" style="display:none;">
+            Distance: <span id="distance">0</span> milles nautiques
+        </div>
         
         <h3>Afficher par catégorie</h3>
         <div id="categoryCheckboxes" class="checkbox-group"></div>
-
-        <div class="info-box">
-            <h4>Distance:</h4>
-            <span id="distance">Non calculée</span>
-        </div>
     </div>
     <div id="map"></div>
 
@@ -87,10 +86,9 @@
         }).addTo(map);
 
         const layers = {}; // Chaque catégorie sera un layer distinct
-        let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
         let departureMarker = null;
         let arrivalMarker = null;
-        let routeLine = null;  // Ligne reliant départ et arrivée
+        let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
 
         // URLs pour les fichiers CSV
         const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
@@ -132,16 +130,34 @@
                     marker.on('click', function() {
                         if (currentSelection === 'departure') {
                             document.getElementById('departure').innerText = name;
-                            departureMarker = marker; // Enregistrer le marqueur de départ
-                            updateRoute();
+                            if (departureMarker) {
+                                map.removeLayer(departureMarker); // Supprimer le marqueur précédent
+                            }
+                            departureMarker = marker;
+                            if (arrivalMarker) {
+                                calculateDistance(departureMarker.getLatLng(), arrivalMarker.getLatLng());
+                            }
                         } else if (currentSelection === 'arrival') {
                             document.getElementById('arrival').innerText = name;
-                            arrivalMarker = marker; // Enregistrer le marqueur d'arrivée
-                            updateRoute();
+                            if (arrivalMarker) {
+                                map.removeLayer(arrivalMarker); // Supprimer le marqueur précédent
+                            }
+                            arrivalMarker = marker;
+                            if (departureMarker) {
+                                calculateDistance(departureMarker.getLatLng(), arrivalMarker.getLatLng());
+                            }
                         }
                     });
                 }
             });
+        }
+
+        // Fonction pour calculer la distance en nautiques
+        function calculateDistance(depCoords, arrCoords) {
+            const distanceInKm = depCoords.distanceTo(arrCoords) / 1000; // Convertir en kilomètres
+            const distanceInNauticalMiles = distanceInKm * 0.53996; // Conversion en milles nautiques
+            document.getElementById('distance').innerText = distanceInNauticalMiles.toFixed(2);
+            document.getElementById('distanceBox').style.display = 'block';
         }
 
         // Fonction pour récupérer les catégories à partir du Sheet (colonne H)
@@ -236,25 +252,16 @@
             document.getElementById('arrivalInput').style.display = 'none';
         });
 
-        // Fonction pour mettre à jour la ligne entre départ et arrivée
-        function updateRoute() {
-            if (departureMarker && arrivalMarker) {
-                const latlngs = [departureMarker.getLatLng(), arrivalMarker.getLatLng()];
-
-                // Retirer la ligne précédente, s'il y en a une
-                if (routeLine) {
-                    map.removeLayer(routeLine);
-                }
-
-                // Tracer une nouvelle ligne entre les deux marqueurs
-                routeLine = L.polyline(latlngs, { color: 'blue', weight: 4 }).addTo(map);
-
-                // Calculer la distance entre les deux points
-                const distance = departureMarker.getLatLng().distanceTo(arrivalMarker.getLatLng()) / 1000;  // En kilomètres
-                document.getElementById('distance').innerText = distance.toFixed(2) + ' km';
-            }
-        }
+        // Réinitialiser les valeurs de départ et d'arrivée
+        document.getElementById('resetSelectionButton').addEventListener('click', () => {
+            document.getElementById('departure').innerText = 'Non sélectionné';
+            document.getElementById('arrival').innerText = 'Non sélectionné';
+            document.getElementById('distanceBox').style.display = 'none';
+            if (departureMarker) map.removeLayer(departureMarker);
+            if (arrivalMarker) map.removeLayer(arrivalMarker);
+            departureMarker = null;
+            arrivalMarker = null;
+        });
     </script>
 </body>
 </html>
-
