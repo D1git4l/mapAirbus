@@ -71,6 +71,8 @@
         <button id="resetSelectionButton" class="toggle-button">Réinitialiser les aéroports</button>
         <div id="distanceBox" class="info-box" style="display:none;">
             Distance: <span id="distance">0</span> milles nautiques
+            <br>
+            Temps de vol: <span id="flightTime">0</span> heures
         </div>
         
         <h3>Afficher par catégorie</h3>
@@ -135,7 +137,7 @@
                             }
                             departureMarker = marker;
                             if (arrivalMarker) {
-                                calculateDistance(departureMarker.getLatLng(), arrivalMarker.getLatLng());
+                                calculateDistanceAndTime(departureMarker.getLatLng(), arrivalMarker.getLatLng());
                             }
                         } else if (currentSelection === 'arrival') {
                             document.getElementById('arrival').innerText = name;
@@ -144,7 +146,7 @@
                             }
                             arrivalMarker = marker;
                             if (departureMarker) {
-                                calculateDistance(departureMarker.getLatLng(), arrivalMarker.getLatLng());
+                                calculateDistanceAndTime(departureMarker.getLatLng(), arrivalMarker.getLatLng());
                             }
                         }
                     });
@@ -152,11 +154,18 @@
             });
         }
 
-        // Fonction pour calculer la distance en nautiques
-        function calculateDistance(depCoords, arrCoords) {
+        // Fonction pour calculer la distance et le temps de vol
+        function calculateDistanceAndTime(depCoords, arrCoords) {
             const distanceInKm = depCoords.distanceTo(arrCoords) / 1000; // Convertir en kilomètres
             const distanceInNauticalMiles = distanceInKm * 0.53996; // Conversion en milles nautiques
+
+            // Calcul du temps de vol en heures
+            const flightTimeInHours = distanceInKm / 800; // Vitesse de 800 km/h
+            const flightTimeInMinutes = Math.round(flightTimeInHours * 60); // Convertir en minutes
+
             document.getElementById('distance').innerText = distanceInNauticalMiles.toFixed(2);
+            document.getElementById('flightTime').innerText = (flightTimeInMinutes / 60).toFixed(2);
+
             document.getElementById('distanceBox').style.display = 'block';
         }
 
