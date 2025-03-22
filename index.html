@@ -26,6 +26,16 @@
     </style>
 </head>
 <body>
+    <div id="sidebar">
+        <h2>Sélection des aéroports</h2>
+        <div class="info-box">
+            Départ: <span id="departure">Non sélectionné</span>
+        </div>
+        <div class="info-box">
+            Arrivée: <span id="arrival">Non sélectionné</span>
+        </div>
+        <button id="generateLinkButton">Générer le plan de vol</button>
+    </div>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.js"></script>
@@ -76,7 +86,8 @@
                             });
 
                             const marker = L.marker([lat, lng], { icon: iconePersonnalisee })
-                                .bindPopup(`<strong>${nom}</strong><br>${colonneE}<br>${colonneF}<br>${colonneG}`);
+                                .bindPopup(`<strong>${nom}</strong><br>${colonneE}<br>${colonneF}<br>${colonneG}`)
+                                .on('click', () => setAirport(nom));
                             markersLayer.addLayer(marker);
                         }
                     }
@@ -85,6 +96,25 @@
                 console.error('Erreur lors du chargement des données CSV :', erreur);
             }
         }
+
+        function setAirport(name) {
+            if (document.getElementById('departure').textContent === 'Non sélectionné') {
+                document.getElementById('departure').textContent = name;
+            } else {
+                document.getElementById('arrival').textContent = name;
+            }
+        }
+
+        document.getElementById('generateLinkButton').addEventListener('click', () => {
+            const departure = document.getElementById('departure').textContent;
+            const arrival = document.getElementById('arrival').textContent;
+            if (departure !== 'Non sélectionné' && arrival !== 'Non sélectionné') {
+                const simbriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
+                window.open(simbriefURL, '_blank');
+            } else {
+                alert('Veuillez sélectionner un aéroport de départ et un aéroport d\'arrivée.');
+            }
+        });
 
         chargerMarqueurs();
     </script>
