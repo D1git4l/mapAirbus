@@ -57,10 +57,26 @@
         .category-group {
             margin-top: 20px;
         }
+
         .category-group h4 {
             margin-top: 20px;
             font-size: 16px;
             font-weight: bold;
+            cursor: pointer;
+        }
+
+        .category-checkboxes {
+            display: none;
+            margin-left: 20px;
+        }
+
+        .category-checkboxes label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .category-group.open .category-checkboxes {
+            display: block;
         }
     </style>
 </head>
@@ -216,18 +232,27 @@
                 const groupDiv = document.createElement('div');
                 groupDiv.classList.add('category-group');
 
-                // Ajouter un titre pour chaque groupe
+                // Ajouter un titre pour chaque groupe (avec un bouton pour ouvrir/fermer)
                 const groupTitle = document.createElement('h4');
                 groupTitle.innerText = group;
+                groupTitle.addEventListener('click', () => {
+                    groupDiv.classList.toggle('open');
+                });
                 groupDiv.appendChild(groupTitle);
+
+                // Ajouter un div pour les cases à cocher de chaque catégorie
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.classList.add('category-checkboxes');
 
                 // Ajouter les cases à cocher pour chaque catégorie du groupe
                 categoryGroups[group].forEach(category => {
                     const label = document.createElement('label');
                     label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
-                    groupDiv.appendChild(label);
+                    checkboxDiv.appendChild(label);
                 });
 
+                groupDiv.appendChild(checkboxDiv);
+                
                 // Ajouter chaque groupe au conteneur principal
                 categoryCheckboxes.appendChild(groupDiv);
             });
@@ -274,35 +299,32 @@
                 const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
                 window.open(simBriefURL, '_blank');
             } else {
-                alert("Veuillez sélectionner un aéroport de départ et d'arrivée.");
+                alert('Veuillez sélectionner un aéroport de départ et d\'arrivée.');
             }
         });
 
-        // Gérer la sélection de départ et d'arrivée
+        // Réinitialiser la sélection des aéroports
+        document.getElementById('resetSelectionButton').addEventListener('click', () => {
+            departureMarker = null;
+            arrivalMarker = null;
+            document.getElementById('departure').innerText = 'Non sélectionné';
+            document.getElementById('arrival').innerText = 'Non sélectionné';
+            map.removeLayer(routeLine);
+            routeLine = null;
+            document.getElementById('distanceBox').style.display = 'none';
+        });
+
+        // Fonction pour gérer le mode de sélection (Départ ou Arrivée)
         document.getElementById('departure').addEventListener('click', () => {
             currentSelection = 'departure';
             document.getElementById('departureInput').style.display = 'block';
             document.getElementById('arrivalInput').style.display = 'none';
         });
-        
+
         document.getElementById('arrival').addEventListener('click', () => {
             currentSelection = 'arrival';
-            document.getElementById('departureInput').style.display = 'none';
             document.getElementById('arrivalInput').style.display = 'block';
-        });
-
-        document.getElementById('resetSelectionButton').addEventListener('click', () => {
-            document.getElementById('departure').innerText = "Non sélectionné";
-            document.getElementById('arrival').innerText = "Non sélectionné";
-            if (departureMarker) {
-                map.removeLayer(departureMarker);
-            }
-            if (arrivalMarker) {
-                map.removeLayer(arrivalMarker);
-            }
-            if (routeLine) {
-                map.removeLayer(routeLine);
-            }
+            document.getElementById('departureInput').style.display = 'none';
         });
     </script>
 </body>
