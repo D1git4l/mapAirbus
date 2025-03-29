@@ -145,7 +145,7 @@
                     });
 
                     const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(`<strong>${name}</strong><br>${info}`);
+                        .bindPopup(<strong>${name}</strong><br>${info});
 
                     // Ajouter le marqueur au layer de la catégorie correspondante
                     if (!layers[category]) {
@@ -247,7 +247,7 @@
                 // Ajouter les cases à cocher pour chaque catégorie du groupe
                 categoryGroups[group].forEach(category => {
                     const label = document.createElement('label');
-                    label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
+                    label.innerHTML = <input type="checkbox" class="categoryCheckbox" value="${category}"> ${category};
                     checkboxDiv.appendChild(label);
                 });
 
@@ -261,18 +261,18 @@
             document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     const category = this.value;
-                    console.log(`Case cochée pour la catégorie: ${category}`);
+                    console.log(Case cochée pour la catégorie: ${category});
 
                     if (this.checked) {
                         // Si la case est cochée, ajouter le layer
                         if (layers[category]) {
-                            console.log(`Ajout du layer pour ${category}`);
+                            console.log(Ajout du layer pour ${category});
                             map.addLayer(layers[category]);
                         }
                     } else {
                         // Si la case est décochée, retirer le layer
                         if (layers[category]) {
-                            console.log(`Retrait du layer pour ${category}`);
+                            console.log(Retrait du layer pour ${category});
                             map.removeLayer(layers[category]);
                         }
                     }
@@ -296,7 +296,7 @@
             
             if (departure && arrival) {
                 // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
-                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
+                const simBriefURL = https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival};
                 window.open(simBriefURL, '_blank');
             } else {
                 alert('Veuillez sélectionner un aéroport de départ et d\'arrivée.');
@@ -326,59 +326,6 @@
             document.getElementById('arrivalInput').style.display = 'block';
             document.getElementById('departureInput').style.display = 'none';
         });
-
-        async function chargerSousCategoriesIndustrie(sheetURL) {
-    const response = await fetch(sheetURL);
-    const text = await response.text();
-    const rows = text.split('\n');
-
-    // Vérifier qu'on a bien au moins 4 lignes pour les données nécessaires
-    if (rows.length < 4) return;
-
-    const headers = rows[0].split(',').slice(1, 4); // Récupère B1, C1, D1
-    const values = rows[2].split(',').slice(1, 4); // Récupère B3, C3, D3
-
-    const sousCategorieContainer = document.createElement('div');
-    sousCategorieContainer.id = 'sousCategoriesIndustrie';
-    sousCategorieContainer.style.marginLeft = '20px';
-
-    headers.forEach((header, index) => {
-        const sousCategorieDiv = document.createElement('div');
-        sousCategorieDiv.classList.add('sous-categorie');
-        
-        const title = document.createElement('h5');
-        title.innerText = header.trim();
-        title.style.cursor = 'pointer';
-        title.addEventListener('click', () => {
-            contentDiv.classList.toggle('open');
-        });
-
-        const contentDiv = document.createElement('div');
-        contentDiv.classList.add('sous-categorie-content');
-        contentDiv.style.display = 'none';
-        contentDiv.innerText = values[index].trim();
-
-        sousCategorieDiv.appendChild(title);
-        sousCategorieDiv.appendChild(contentDiv);
-        sousCategorieContainer.appendChild(sousCategorieDiv);
-    });
-
-    document.getElementById('categoryCheckboxes').appendChild(sousCategorieContainer);
-}
-
-document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        if (this.value === 'Industrie viande') {
-            if (this.checked) {
-                chargerSousCategoriesIndustrie('URL_DE_LA_FEUILLE_INDUSTRIE_2');
-            } else {
-                const sousCatDiv = document.getElementById('sousCategoriesIndustrie');
-                if (sousCatDiv) sousCatDiv.remove();
-            }
-        }
-    });
-});
-
     </script>
 </body>
 </html>
