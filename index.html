@@ -145,7 +145,7 @@
                     });
 
                     const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(<strong>${name}</strong><br>${info});
+                        .bindPopup(`<strong>${name}</strong><br>${info}`);
 
                     // Ajouter le marqueur au layer de la catégorie correspondante
                     if (!layers[category]) {
@@ -247,7 +247,7 @@
                 // Ajouter les cases à cocher pour chaque catégorie du groupe
                 categoryGroups[group].forEach(category => {
                     const label = document.createElement('label');
-                    label.innerHTML = <input type="checkbox" class="categoryCheckbox" value="${category}"> ${category};
+                    label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
                     checkboxDiv.appendChild(label);
                 });
 
@@ -261,18 +261,18 @@
             document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     const category = this.value;
-                    console.log(Case cochée pour la catégorie: ${category});
+                    console.log(`Case cochée pour la catégorie: ${category}`);
 
                     if (this.checked) {
                         // Si la case est cochée, ajouter le layer
                         if (layers[category]) {
-                            console.log(Ajout du layer pour ${category});
+                            console.log(`Ajout du layer pour ${category}`);
                             map.addLayer(layers[category]);
                         }
                     } else {
                         // Si la case est décochée, retirer le layer
                         if (layers[category]) {
-                            console.log(Retrait du layer pour ${category});
+                            console.log(`Retrait du layer pour ${category}`);
                             map.removeLayer(layers[category]);
                         }
                     }
@@ -296,7 +296,7 @@
             
             if (departure && arrival) {
                 // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
-                const simBriefURL = https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival};
+                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
                 window.open(simBriefURL, '_blank');
             } else {
                 alert('Veuillez sélectionner un aéroport de départ et d\'arrivée.');
