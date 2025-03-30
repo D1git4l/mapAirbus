@@ -99,31 +99,9 @@
             Temps de vol: <span id="flightTime">0</span> heures
         </div>
         
-        <h3>Sélectionner un callsign</h3>
-        <select id="callsignSelect">
-            <option value="">Sélectionner un callsign</option>
-            <option value="AZH201">AZH201</option>
-            <option value="AZH202">AZH202</option>
-            <option value="AZH203">AZH203</option>
-            <option value="AZH204">AZH204</option>
-            <option value="AZH205">AZH205</option>
-            <option value="AZH206">AZH206</option>
-            <option value="AZHFR">AZHFR</option>
-            <option value="AZHUS">AZHUS</option>
-            <option value="AZHACC">AZHACC</option>
-            <option value="AZH501">AZH501</option>
-            <option value="AZH502">AZH502</option>
-            <option value="AZH503">AZH503</option>
-            <option value="AZH504">AZH504</option>
-            <option value="AZH505">AZH505</option>
-            <option value="AZH506">AZH506</option>
-            <option value="AZH507">AZH507</option>
-        </select>
-        
         <h3>Afficher par catégorie</h3>
         <div id="categoryCheckboxes" class="checkbox-group"></div>
     </div>
-
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
@@ -167,7 +145,7 @@
                     });
 
                     const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(`<strong>${name}</strong><br>${info}`);
+                        .bindPopup(<strong>${name}</strong><br>${info});
 
                     // Ajouter le marqueur au layer de la catégorie correspondante
                     if (!layers[category]) {
@@ -215,70 +193,139 @@
 
             document.getElementById('distanceBox').style.display = 'block';
 
-            // Dessiner la ligne de vol
+            // Si une ligne existe déjà, on la retire avant de dessiner la nouvelle
             if (routeLine) {
-                map.removeLayer(routeLine); // Supprimer la ligne précédente
+                map.removeLayer(routeLine);
             }
-            routeLine = L.polyline([depCoords, arrCoords], { color: 'blue' }).addTo(map);
+
+            // Tracer la ligne entre le Départ et l'Arrivée
+            routeLine = L.polyline([depCoords, arrCoords], {color: 'blue'}).addTo(map);
         }
 
-        // Ajouter les catégories au menu latéral
-        function ajouterCategories(categories) {
-            const categoryCheckboxes = document.getElementById('categoryCheckboxes');
+        // Fonction pour récupérer les catégories à partir du Sheet (colonne H)
+        async function chargerCategories(sheetURL) {
+            const response = await fetch(sheetURL);
+            const text = await response.text();
+            const rows = text.split('\n').slice(1); // Ignorer la première ligne
+
+            const categories = new Set();
+            rows.forEach(row => {
+                const cols = row.split(',');
+                if (cols[7]) categories.add(cols[7].trim()); // Colonne H pour les catégories
+            });
+
+            console.log('Catégories chargées:', categories);
+
+            // Organiser les catégories par premier mot
+            const categoryGroups = {};
             categories.forEach(category => {
-                const checkboxLabel = document.createElement('label');
-                const checkboxInput = document.createElement('input');
-                checkboxInput.type = 'checkbox';
-                checkboxInput.value = category;
-                checkboxInput.checked = true; // Par défaut, afficher tous les marqueurs
-                checkboxInput.addEventListener('change', function() {
-                    if (this.checked) {
-                        layers[category].addTo(map);  // Ajouter les marqueurs de cette catégorie
-                    } else {
-                        map.removeLayer(layers[category]);  // Retirer les marqueurs de cette catégorie
-                    }
+                const firstWord = category.split(' ')[0];
+                if (!categoryGroups[firstWord]) {
+                    categoryGroups[firstWord] = [];
+                }
+                categoryGroups[firstWord].push(category);
+            });
+
+            // Créer l'HTML pour les catégories triées et espacées
+            const categoryCheckboxes = document.getElementById('categoryCheckboxes');
+            Object.keys(categoryGroups).sort().forEach(group => {
+                const groupDiv = document.createElement('div');
+                groupDiv.classList.add('category-group');
+
+                // Ajouter un titre pour chaque groupe (avec un bouton pour ouvrir/fermer)
+                const groupTitle = document.createElement('h4');
+                groupTitle.innerText = group;
+                groupTitle.addEventListener('click', () => {
+                    groupDiv.classList.toggle('open');
+                });
+                groupDiv.appendChild(groupTitle);
+
+                // Ajouter un div pour les cases à cocher de chaque catégorie
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.classList.add('category-checkboxes');
+
+                // Ajouter les cases à cocher pour chaque catégorie du groupe
+                categoryGroups[group].forEach(category => {
+                    const label = document.createElement('label');
+                    label.innerHTML = <input type="checkbox" class="categoryCheckbox" value="${category}"> ${category};
+                    checkboxDiv.appendChild(label);
                 });
 
-                checkboxLabel.appendChild(checkboxInput);
-                checkboxLabel.appendChild(document.createTextNode(category));
-
-                categoryCheckboxes.appendChild(checkboxLabel);
+                groupDiv.appendChild(checkboxDiv);
+                
+                // Ajouter chaque groupe au conteneur principal
+                categoryCheckboxes.appendChild(groupDiv);
             });
+
+            // Ajouter l'événement de changement sur chaque case à cocher
+            document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const category = this.value;
+                    console.log(Case cochée pour la catégorie: ${category});
+
+                    if (this.checked) {
+                        // Si la case est cochée, ajouter le layer
+                        if (layers[category]) {
+                            console.log(Ajout du layer pour ${category});
+                            map.addLayer(layers[category]);
+                        }
+                    } else {
+                        // Si la case est décochée, retirer le layer
+                        if (layers[category]) {
+                            console.log(Retrait du layer pour ${category});
+                            map.removeLayer(layers[category]);
+                        }
+                    }
+                });
+            });
+
+            // Charger les marqueurs pour les catégories
+            chargerMarqueurs(sheetURL, Array.from(categories));
         }
 
-        // Charger les catégories et les marqueurs des deux fichiers CSV
-        async function chargerToutesLesCategories() {
-            const categories = [];
-            const response1 = await fetch(sheetURL1);
-            const text1 = await response1.text();
-            const rows1 = text1.split('\n').slice(1); // Ignorer la première ligne
-            rows1.forEach(row => {
-                const cols = row.split(',');
-                const category = cols[7].trim();
-                if (!categories.includes(category)) {
-                    categories.push(category);
-                }
-            });
+        // Charger les catégories du Sheet 1
+        chargerCategories(sheetURL1);
 
-            const response2 = await fetch(sheetURL2);
-            const text2 = await response2.text();
-            const rows2 = text2.split('\n').slice(1); // Ignorer la première ligne
-            rows2.forEach(row => {
-                const cols = row.split(',');
-                const category = cols[7].trim();
-                if (!categories.includes(category)) {
-                    categories.push(category);
-                }
-            });
+        // Charger les catégories du Sheet 2
+        chargerCategories(sheetURL2);
 
-            ajouterCategories(categories);
+        // Fonction pour générer le plan de vol (SimBrief)
+        document.getElementById('generateLinkButton').addEventListener('click', () => {
+            const departure = document.getElementById('departure').innerText;
+            const arrival = document.getElementById('arrival').innerText;
+            
+            if (departure && arrival) {
+                // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
+                const simBriefURL = https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival};
+                window.open(simBriefURL, '_blank');
+            } else {
+                alert('Veuillez sélectionner un aéroport de départ et d\'arrivée.');
+            }
+        });
 
-            chargerMarqueurs(sheetURL1, categories);  // Charger les marqueurs du premier fichier
-            chargerMarqueurs(sheetURL2, categories);  // Charger les marqueurs du deuxième fichier
-        }
+        // Réinitialiser la sélection des aéroports
+        document.getElementById('resetSelectionButton').addEventListener('click', () => {
+            departureMarker = null;
+            arrivalMarker = null;
+            document.getElementById('departure').innerText = 'Non sélectionné';
+            document.getElementById('arrival').innerText = 'Non sélectionné';
+            map.removeLayer(routeLine);
+            routeLine = null;
+            document.getElementById('distanceBox').style.display = 'none';
+        });
 
-        chargerToutesLesCategories();  // Initialiser l'affichage des marqueurs et catégories
+        // Fonction pour gérer le mode de sélection (Départ ou Arrivée)
+        document.getElementById('departure').addEventListener('click', () => {
+            currentSelection = 'departure';
+            document.getElementById('departureInput').style.display = 'block';
+            document.getElementById('arrivalInput').style.display = 'none';
+        });
+
+        document.getElementById('arrival').addEventListener('click', () => {
+            currentSelection = 'arrival';
+            document.getElementById('arrivalInput').style.display = 'block';
+            document.getElementById('departureInput').style.display = 'none';
+        });
     </script>
 </body>
 </html>
-
