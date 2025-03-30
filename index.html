@@ -91,29 +91,6 @@
             Arrivée: <span id="arrival" class="clickable">Non sélectionné</span>
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
-        <div class="info-box">
-            Callsign:
-            <select id="callsignSelect">
-                <option value="">Sélectionner un callsign</option>
-                <option value="AZH201">AZH201</option>
-                <option value="AZH202">AZH202</option>
-                <option value="AZH203">AZH203</option>
-                <option value="AZH204">AZH204</option>
-                <option value="AZH205">AZH205</option>
-                <option value="AZH206">AZH206</option>
-                <option value="AZHFR">AZHFR</option>
-                <option value="AZHUS">AZHUS</option>
-                <option value="AZHACC">AZHACC</option>
-                <option value="AZH501">AZH501</option>
-                <option value="AZH502">AZH502</option>
-                <option value="AZH503">AZH503</option>
-                <option value="AZH504">AZH504</option>
-                <option value="AZH505">AZH505</option>
-                <option value="AZH506">AZH506</option>
-                <option value="AZH507">AZH507</option>
-            </select>
-            <input type="text" id="customCallsign" placeholder="Callsign personnalisé" style="display: none;">
-        </div>
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
         <button id="resetSelectionButton" class="toggle-button">Réinitialiser les aéroports</button>
         <div id="distanceBox" class="info-box" style="display:none;">
@@ -168,7 +145,7 @@
                     });
 
                     const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(<strong>${name}</strong><br>${info});
+                        .bindPopup(`<strong>${name}</strong><br>${info}`);
 
                     // Ajouter le marqueur au layer de la catégorie correspondante
                     if (!layers[category]) {
@@ -270,7 +247,7 @@
                 // Ajouter les cases à cocher pour chaque catégorie du groupe
                 categoryGroups[group].forEach(category => {
                     const label = document.createElement('label');
-                    label.innerHTML = <input type="checkbox" class="categoryCheckbox" value="${category}"> ${category};
+                    label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
                     checkboxDiv.appendChild(label);
                 });
 
@@ -284,18 +261,18 @@
             document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
                 checkbox.addEventListener('change', function() {
                     const category = this.value;
-                    console.log(Case cochée pour la catégorie: ${category});
+                    console.log(`Case cochée pour la catégorie: ${category}`);
 
                     if (this.checked) {
                         // Si la case est cochée, ajouter le layer
                         if (layers[category]) {
-                            console.log(Ajout du layer pour ${category});
+                            console.log(`Ajout du layer pour ${category}`);
                             map.addLayer(layers[category]);
                         }
                     } else {
                         // Si la case est décochée, retirer le layer
                         if (layers[category]) {
-                            console.log(Retrait du layer pour ${category});
+                            console.log(`Retrait du layer pour ${category}`);
                             map.removeLayer(layers[category]);
                         }
                     }
@@ -316,20 +293,13 @@
         document.getElementById('generateLinkButton').addEventListener('click', () => {
             const departure = document.getElementById('departure').innerText;
             const arrival = document.getElementById('arrival').innerText;
-            const callsignSelect = document.getElementById('callsignSelect');
-            const customCallsignInput = document.getElementById('customCallsign');
-            let callsign = callsignSelect.value;
-
-            if (callsign === "") {
-                callsign = customCallsignInput.value;
-            }
-
-            if (departure && arrival && callsign) {
+            
+            if (departure && arrival) {
                 // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
-                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=${callsign}&orig=${departure}&dest=${arrival}`;
+                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
                 window.open(simBriefURL, '_blank');
             } else {
-                alert('Veuillez sélectionner un aéroport de départ, d\'arrivée et un callsign.');
+                alert('Veuillez sélectionner un aéroport de départ et d\'arrivée.');
             }
         });
 
@@ -355,15 +325,6 @@
             currentSelection = 'arrival';
             document.getElementById('arrivalInput').style.display = 'block';
             document.getElementById('departureInput').style.display = 'none';
-        });
-
-        // Gestion du callsign personnalisé
-        document.getElementById('callsignSelect').addEventListener('change', function() {
-            if (this.value === "") {
-                document.getElementById('customCallsign').style.display = 'block';
-            } else {
-                document.getElementById('customCallsign').style.display = 'none';
-            }
         });
     </script>
 </body>
