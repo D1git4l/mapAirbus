@@ -415,17 +415,23 @@
 
         // Fonction pour générer le plan de vol (SimBrief)
         document.getElementById('generateLinkButton').addEventListener('click', () => {
-        const departure = document.getElementById('departure').innerText;
-        const arrival = document.getElementById('arrival').innerText;
-        const callsign = document.getElementById('callsign').value.trim();
+            const departure = document.getElementById('departure').innerText.trim();
+            const arrival = document.getElementById('arrival').innerText.trim();
+            const callsign = document.getElementById('callsign').value.trim();
 
-        if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && callsign) {
-            const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${callsign}&orig=${departure}&dest=${arrival}`;
+            // Vérifie si le départ, l'arrivée et le callsign sont valides
+            if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && callsign) {
+                // Crée l'URL pour SimBrief avec les paramètres
+                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${callsign}&orig=${departure}&dest=${arrival}`;
+        
+            // Ouvre le lien dans une nouvelle fenêtre
             window.open(simBriefURL, '_blank');
-        } else {
+            } else {
+            // Si l'un des champs n'est pas correctement renseigné
             alert('Veuillez sélectionner un départ, une arrivée et entrer un callsign.');
         }
     });
+
 
 
         // Réinitialiser la sélection des aéroports
