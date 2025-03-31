@@ -417,29 +417,21 @@
 document.getElementById('generateLinkButton').addEventListener('click', () => {
     const departure = document.getElementById('departure').innerText.trim();
     const arrival = document.getElementById('arrival').innerText.trim();
-    const callsign = document.getElementById('callsign').value.trim();
+    const airline = document.getElementById('airline').value.trim().toUpperCase();
+    const flightNumber = document.getElementById('flightNumber').value.trim();
 
-    // Vérifie si le départ, l'arrivée et le callsign sont valides
-    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && callsign) {
-        // Diviser le callsign en airline (AZH) et flight number (201, 202, etc.)
-        const airline = callsign.substring(0, 3); // Prend les 3 premiers caractères comme le code de la compagnie
-        const flightNumber = callsign.substring(3); // Prend le reste du callsign comme numéro de vol
-
-        // Vérifie que le flightNumber est valide (qu'il ne soit pas vide ou invalide)
-        if (flightNumber) {
-            // Crée l'URL pour SimBrief avec les paramètres
-            const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airline}&flight_number=${flightNumber}&orig=${departure}&dest=${arrival}`;
-            
-            // Ouvre le lien dans une nouvelle fenêtre
-            window.open(simBriefURL, '_blank');
-        } else {
-            alert('Veuillez entrer un numéro de vol valide dans le callsign.');
-        }
+    // Vérifie si tous les champs sont remplis
+    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && airline && flightNumber) {
+        // Crée l'URL avec airline et flight number séparés
+        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airline}&flight_number=${flightNumber}&orig=${departure}&dest=${arrival}`;
+        
+        // Ouvre le lien dans une nouvelle fenêtre
+        window.open(simBriefURL, '_blank');
     } else {
-        // Si l'un des champs n'est pas correctement renseigné
-        alert('Veuillez sélectionner un départ, une arrivée et entrer un callsign.');
+        alert('Veuillez entrer une compagnie aérienne, un numéro de vol, un départ et une arrivée.');
     }
 });
+
         
 
 
