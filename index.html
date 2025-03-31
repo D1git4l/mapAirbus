@@ -98,6 +98,11 @@
             <br>
             Temps de vol: <span id="flightTime">0</span> heures
         </div>
+        <div class="info-box">
+        <label for="callsign">Callsign :</label>
+        <input type="text" id="callsign" placeholder="Ex: AZH197">
+     </div>
+
         
         <h3>Afficher par catégorie</h3>
         <div id="categoryCheckboxes" class="checkbox-group"></div>
@@ -291,17 +296,18 @@
 
         // Fonction pour générer le plan de vol (SimBrief)
         document.getElementById('generateLinkButton').addEventListener('click', () => {
-            const departure = document.getElementById('departure').innerText;
-            const arrival = document.getElementById('arrival').innerText;
-            
-            if (departure && arrival) {
-                // Remplacez l'URL de SimBrief avec celle qui correspond à vos besoins
-                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=AZH&fltnum=197&orig=${departure}&dest=${arrival}`;
-                window.open(simBriefURL, '_blank');
-            } else {
-                alert('Veuillez sélectionner un aéroport de départ et d\'arrivée.');
-            }
-        });
+        const departure = document.getElementById('departure').innerText;
+        const arrival = document.getElementById('arrival').innerText;
+        const callsign = document.getElementById('callsign').value.trim();
+
+        if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && callsign) {
+            const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${callsign}&orig=${departure}&dest=${arrival}`;
+            window.open(simBriefURL, '_blank');
+        } else {
+            alert('Veuillez sélectionner un départ, une arrivée et entrer un callsign.');
+        }
+    });
+
 
         // Réinitialiser la sélection des aéroports
         document.getElementById('resetSelectionButton').addEventListener('click', () => {
