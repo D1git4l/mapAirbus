@@ -93,27 +93,44 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <div class="info-box">
-        <label for="callsign">Callsign :</label>
-        <input type="text" id="callsign" list="callsignList" placeholder="Sélectionner ou saisir un callsign">
-        <datalist id="callsignList">
-            <option value="AZH201">AZH201</option>
-            <option value="AZH202">AZH202</option>
-            <option value="AZH203">AZH203</option>
-            <option value="AZH204">AZH204</option>
-            <option value="AZH205">AZH205</option>
-            <option value="AZH206">AZH206</option>
-            <option value="AZHFR">AZHFR</option>
-            <option value="AZHUS">AZHUS</option>
-            <option value="AZHACC">AZHACC</option>
-            <option value="AZH501">AZH501</option>
-            <option value="AZH502">AZH502</option>
-            <option value="AZH503">AZH503</option>
-            <option value="AZH504">AZH504</option>
-            <option value="AZH505">AZH505</option>
-            <option value="AZH506">AZH506</option>
-            <option value="AZH507">AZH507</option>
-        </datalist>
-    </div>
+    <label for="callsign">Callsign :</label>
+    <select id="callsign" name="callsign">
+        <option value="">Sélectionner un callsign</option>
+        <option value="AZH201">AZH201</option>
+        <option value="AZH202">AZH202</option>
+        <option value="AZH203">AZH203</option>
+        <option value="AZH204">AZH204</option>
+        <option value="AZH205">AZH205</option>
+        <option value="AZH206">AZH206</option>
+        <option value="AZHFR">AZHFR</option>
+        <option value="AZHUS">AZHUS</option>
+        <option value="AZHACC">AZHACC</option>
+        <option value="AZH501">AZH501</option>
+        <option value="AZH502">AZH502</option>
+        <option value="AZH503">AZH503</option>
+        <option value="AZH504">AZH504</option>
+        <option value="AZH505">AZH505</option>
+        <option value="AZH506">AZH506</option>
+        <option value="AZH507">AZH507</option>
+        <option value="other">Autre (Saisir un callsign)</option> <!-- Option pour saisir un callsign -->
+    </select>
+    <input type="text" id="customCalls" style="display:none" placeholder="Saisissez un callsign personnalisé">
+</div>
+
+<script>
+    const callsignSelect = document.getElementById('callsign');
+    const customCallsInput = document.getElementById('customCalls');
+
+    // Afficher/masquer le champ de saisie selon l'option choisie
+    callsignSelect.addEventListener('change', function() {
+        if (callsignSelect.value === 'other') {
+            customCallsInput.style.display = 'block'; // Affiche le champ de saisie si "Autre" est sélectionné
+        } else {
+            customCallsInput.style.display = 'none'; // Masque le champ de saisie si une option prédéfinie est sélectionnée
+        }
+    });
+</script>
+
 
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
         <button id="resetSelectionButton" class="toggle-button">Réinitialiser les aéroports</button>
