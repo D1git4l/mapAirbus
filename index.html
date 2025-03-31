@@ -23,6 +23,7 @@
         #map {
             flex-grow: 1;
             height: 100vh;
+            min-width: 500px; /* Empêche que la carte soit trop étroite */
         }
         .info-box {
             margin-bottom: 10px;
@@ -93,7 +94,8 @@
         </div>
         <div class="info-box">
             <label for="callsign">Callsign :</label>
-            <select id="callsign">
+            <input type="text" id="callsign" list="callsignList">
+            <datalist id="callsignList">
                 <option value="">Sélectionner un callsign</option>
                 <option value="AZH201">AZH201</option>
                 <option value="AZH202">AZH202</option>
@@ -111,7 +113,7 @@
                 <option value="AZH505">AZH505</option>
                 <option value="AZH506">AZH506</option>
                 <option value="AZH507">AZH507</option>
-            </select>
+            </datalist>
         </div>
 
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
@@ -120,7 +122,8 @@
             Distance: <span id="distance">0</span> milles nautiques
             <br>
             Temps de vol: <span id="flightTime">0</span> heures
-        
+        </div>
+
         <h3>Afficher par catégorie</h3>
         <div id="categoryCheckboxes" class="checkbox-group"></div>
     </div>
@@ -138,6 +141,89 @@
         let arrivalMarker = null;
         let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
         let routeLine = null;  // Variable pour stocker la ligne tracée
+
+        // Fonction pour gérer l'entrée manuelle d'aéroport
+        function handleAirportInput(inputId, markerType) {
+            const input = document.getElementById(inputId);
+            const name = input.value.trim();
+            if (name) {
+                // Recherche de l'aéroport via OpenStreetMap API
+                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${name}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lon = parseFloat(data[0].lon);
+                            const popupMessage = `${name}<br>Latitude: ${lat}<br>Longitude: ${lon}`;
+                            
+                            // En fonction de l'aéroport de départ ou d'arrivée, on place le marqueur
+                            if (markerType === 'departure') {
+                                if (departureMarker) {
+                                    map.removeLayer(departureMarker); // Retirer le précédent marqueur
+                                }
+                                departureMarker = L.marker([lat, lon]).addTo(map)
+                                    .bindPopup(popupMessage)
+                                    .openPopup();
+                                document.getElementById('departure').innerText = name;
+                            } else if (markerType === 'arrival') {
+                                if (arrivalMarker) {
+                                    map.removeLayer(arrivalMarker); // Retirer le précédent marqueur
+                                }
+                                arrivalMarker = L.marker([lat, lon]).addTo(map)
+                                    .bindPopup(popupMessage)
+                                    .openPopup();
+                                document.getElementById('arrival').innerText = name;
+                            }
+
+                            // Fermer le champ de texte après la saisie
+                            input.style.display = 'none';
+
+                            // Si un départ et une arrivée sont sélectionnés, on calcule la distance
+                            if (departureMarker && arrivalMarker) {
+                                calculateDistanceAndTime(departureMarker.getLatLng(), arrivalMarker.getLatLng());
+                            }
+                        } else {
+                            alert("Aéroport introuvable, veuillez vérifier le nom.");
+                        }
+                    })
+                    .catch(error => {
+                        alert("Erreur lors de la recherche de l'aéroport.");
+                        console.error(error);
+                    });
+            }
+        }
+
+        // Fonction pour calculer la distance et le temps de vol
+        function calculateDistanceAndTime(departureLatLng, arrivalLatLng) {
+            const distance = departureLatLng.distanceTo(arrivalLatLng) / 1852;  // Convertir la distance en milles nautiques
+            const flightTime = (distance / 500).toFixed(2);  // Temps de vol estimé (500 knots)
+            
+            document.getElementById('distance').innerText = distance.toFixed(2);
+            document.getElementById('flightTime').innerText = flightTime;
+            document.getElementById('distanceBox').style.display = 'block'; // Afficher les infos de distance/temps
+        }
+
+        // Ajouter des événements pour chaque champ d'aéroport
+        document.getElementById('departure').addEventListener('click', () => {
+            currentSelection = 'departure';  // Indiquer qu'on sélectionne l'aéroport de départ
+            document.getElementById('departureInput').style.display = 'block';  // Afficher le champ de saisie
+            document.getElementById('arrivalInput').style.display = 'none';     // Cacher l'autre champ
+        });
+
+        document.getElementById('arrival').addEventListener('click', () => {
+            currentSelection = 'arrival';  // Indiquer qu'on sélectionne l'aéroport d'arrivée
+            document.getElementById('arrivalInput').style.display = 'block';     // Afficher le champ de saisie
+            document.getElementById('departureInput').style.display = 'none';    // Cacher l'autre champ
+        });
+
+        // Ajouter des événements pour la saisie manuelle d'aéroport (quand on sort du champ de texte)
+        document.getElementById('departureInput').addEventListener('blur', () => {
+            handleAirportInput('departureInput', 'departure');
+        });
+
+        document.getElementById('arrivalInput').addEventListener('blur', () => {
+            handleAirportInput('arrivalInput', 'arrival');
+        });
 
         // URLs pour les fichiers CSV
         const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
