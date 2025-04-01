@@ -417,20 +417,25 @@
 document.getElementById('generateLinkButton').addEventListener('click', () => {
     const departure = document.getElementById('departure').innerText.trim();
     const arrival = document.getElementById('arrival').innerText.trim();
-    const airline = document.getElementById('airline').value.trim().toUpperCase();
-    const flightNumber = document.getElementById('flightNumber').value.trim();
+    const callsignSelect = document.getElementById('callsign');
+    let callsign = callsignSelect.value.trim();
+
+    if (callsign === 'other') {
+        callsign = document.getElementById('customCalls').value.trim();
+    }
 
     // Vérifie si tous les champs sont remplis
-    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && airline && flightNumber) {
-        // Crée l'URL avec airline et flight number séparés
-        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airline}&flight_number=${flightNumber}&orig=${departure}&dest=${arrival}`;
+    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && callsign) {
+        // Crée l'URL avec callsign directement
+        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${callsign}&orig=${departure}&dest=${arrival}`;
         
         // Ouvre le lien dans une nouvelle fenêtre
         window.open(simBriefURL, '_blank');
     } else {
-        alert('Veuillez entrer une compagnie aérienne, un numéro de vol, un départ et une arrivée.');
+        alert('Veuillez entrer un callsign, un départ et une arrivée.');
     }
 });
+
 
         
 
