@@ -451,8 +451,7 @@
         // Charger les catégories du Sheet 2
         chargerCategories(sheetURL2);
 
-        
-// Fonction pour générer le plan de vol (SimBrief)
+        // Fonction pour générer le plan de vol (SimBrief)
 document.getElementById('generateLinkButton').addEventListener('click', () => {
     const departure = document.getElementById('departure').innerText.trim();
     const arrival = document.getElementById('arrival').innerText.trim();
@@ -482,6 +481,7 @@ document.getElementById('generateLinkButton').addEventListener('click', () => {
         alert('Veuillez entrer un callsign, un départ et une arrivée.');
     }
 });
+
 
 
         // Réinitialiser la sélection des aéroports
