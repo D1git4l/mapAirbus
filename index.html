@@ -93,44 +93,64 @@
             <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
         </div>
         <div class="info-box">
-    <label for="callsign">Callsign :</label>
-    <select id="callsign" name="callsign">
-        <option value="">Sélectionner un callsign</option>
-        <option value="AZH201">AZH201</option>
-        <option value="AZH202">AZH202</option>
-        <option value="AZH203">AZH203</option>
-        <option value="AZH204">AZH204</option>
-        <option value="AZH205">AZH205</option>
-        <option value="AZH206">AZH206</option>
-        <option value="AZHFR">AZHFR</option>
-        <option value="AZHUS">AZHUS</option>
-        <option value="AZHACC">AZHACC</option>
-        <option value="AZH501">AZH501</option>
-        <option value="AZH502">AZH502</option>
-        <option value="AZH503">AZH503</option>
-        <option value="AZH504">AZH504</option>
-        <option value="AZH505">AZH505</option>
-        <option value="AZH506">AZH506</option>
-        <option value="AZH507">AZH507</option>
-        <option value="other">Autre (Saisir un callsign)</option> <!-- Option pour saisir un callsign -->
-    </select>
-    <input type="text" id="customCalls" style="display:none" placeholder="Saisissez un callsign personnalisé">
-</div>
+            <label>Callsign :</label>
+            <span style="font-weight:bold;">AZH</span>
+            <select id="callsign" name="callsign">
+                <option value="">Sélectionner un numéro</option>
+                <option value="201">201</option>
+                <option value="202">202</option>
+                <option value="203">203</option>
+                <option value="204">204</option>
+                <option value="205">205</option>
+                <option value="206">206</option>
+                <option value="FR">FR</option>
+                <option value="US">US</option>
+                <option value="ACC">ACC</option>
+                <option value="501">501</option>
+                <option value="502">502</option>
+                <option value="503">503</option>
+                <option value="504">504</option>
+                <option value="505">505</option>
+                <option value="506">506</option>
+                <option value="507">507</option>
+                <option value="other">Autre (saisir un callsign)</option>
+            </select>
+            <div id="customCallsignFields" style="display:none; margin-top: 5px;">
+                <input type="text" id="customAirline" placeholder="Préfixe (ex: XYZ)" style="width: 80px;">
+                <input type="text" id="customNumber" placeholder="Numéro (ex: 123)" style="width: 100px;">
+            </div>
+        </div>
+    </div>
 
-<script>
-    const callsignSelect = document.getElementById('callsign');
-    const customCallsInput = document.getElementById('customCalls');
+    <script>
+        const callsignSelect = document.getElementById('callsign');
+        const customFields = document.getElementById('customCallsignFields');
+        const customAirline = document.getElementById('customAirline');
+        const customNumber = document.getElementById('customNumber');
 
-    // Afficher/masquer le champ de saisie selon l'option choisie
-    callsignSelect.addEventListener('change', function() {
-        if (callsignSelect.value === 'other') {
-            customCallsInput.style.display = 'block'; // Affiche le champ de saisie si "Autre" est sélectionné
-        } else {
-            customCallsInput.style.display = 'none'; // Masque le champ de saisie si une option prédéfinie est sélectionnée
+        callsignSelect.addEventListener('change', function () {
+            if (this.value === 'other') {
+                customFields.style.display = 'inline-block';
+                customAirline.focus();
+            } else {
+                customFields.style.display = 'none';
+            }
+        });
+
+        function getCallsignFinal() {
+            if (callsignSelect.value === 'other') {
+                const prefix = customAirline.value.trim().toUpperCase();
+                const number = customNumber.value.trim();
+                return prefix && number ? prefix + number : "";
+            } else {
+                return "AZH" + callsignSelect.value;
+            }
         }
-    });
-</script>
 
+        // Exemple d'utilisation :
+        // console.log(getCallsignFinal());
+    </script>
+</body>
 
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
         <button id="resetSelectionButton" class="toggle-button">Réinitialiser les aéroports</button>
