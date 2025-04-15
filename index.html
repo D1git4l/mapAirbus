@@ -82,74 +82,87 @@
     </style>
 </head>
 <body>
-    <div id="sidebar">
-        <h2>Sélection des aéroports</h2>
-        <div class="info-box">
-            Départ: <span id="departure" class="clickable">Non sélectionné</span>
-            <input type="text" id="departureInput" style="display:none" placeholder="Entrez un aéroport">
-        </div>
-        <div class="info-box">
-            Arrivée: <span id="arrival" class="clickable">Non sélectionné</span>
-            <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
-        </div>
-        <div class="info-box">
-            <label>Callsign :</label>
-            <span style="font-weight:bold;">AZH</span>
-            <select id="callsign" name="callsign">
-                <option value="">Sélectionner un numéro</option>
-                <option value="201">201</option>
-                <option value="202">202</option>
-                <option value="203">203</option>
-                <option value="204">204</option>
-                <option value="205">205</option>
-                <option value="206">206</option>
-                <option value="FR">FR</option>
-                <option value="US">US</option>
-                <option value="ACC">ACC</option>
-                <option value="501">501</option>
-                <option value="502">502</option>
-                <option value="503">503</option>
-                <option value="504">504</option>
-                <option value="505">505</option>
-                <option value="506">506</option>
-                <option value="507">507</option>
-                <option value="other">Autre (saisir un callsign)</option>
-            </select>
-            <div id="customCallsignFields" style="display:none; margin-top: 5px;">
-                <input type="text" id="customAirline" placeholder="Préfixe (ex: XYZ)" style="width: 80px;">
-                <input type="text" id="customNumber" placeholder="Numéro (ex: 123)" style="width: 100px;">
-            </div>
-        </div>
+   <!-- Partie du formulaire où l'utilisateur peut sélectionner le callsign -->
+   <div class="info-box">
+     <label>Callsign :</label>
+     <span style="font-weight:bold;" id="callsignDisplay">AZH</span>
+     <select id="callsign" name="callsign">
+        <option value="">Sélectionner un numéro</option>
+        <option value="201">201</option>
+        <option value="202">202</option>
+        <option value="203">203</option>
+        <option value="204">204</option>
+        <option value="205">205</option>
+        <option value="206">206</option>
+        <option value="FR">FR</option>
+        <option value="US">US</option>
+        <option value="ACC">ACC</option>
+        <option value="501">501</option>
+        <option value="502">502</option>
+        <option value="503">503</option>
+        <option value="504">504</option>
+        <option value="505">505</option>
+        <option value="506">506</option>
+        <option value="507">507</option>
+        <option value="other">Autre (saisir un callsign)</option>
+    </select>
+    <div id="customCallsignFields" style="display:none; margin-top: 5px;">
+        <input type="text" id="customAirline" placeholder="Préfixe (ex: XYZ)" style="width: 80px;">
+        <input type="text" id="customNumber" placeholder="Numéro (ex: 123)" style="width: 100px;">
     </div>
+</div>
 
-    <script>
-        const callsignSelect = document.getElementById('callsign');
-        const customFields = document.getElementById('customCallsignFields');
-        const customAirline = document.getElementById('customAirline');
-        const customNumber = document.getElementById('customNumber');
+<!-- Les scripts pour gérer l'événement de changement de selection -->
+<script>
+    const callsignSelect = document.getElementById('callsign');
+    const customFields = document.getElementById('customCallsignFields');
+    const customAirline = document.getElementById('customAirline');
+    const customNumber = document.getElementById('customNumber');
+    const callsignDisplay = document.getElementById('callsignDisplay'); // Affiche le callsign final
 
-        callsignSelect.addEventListener('change', function () {
-            if (this.value === 'other') {
-                customFields.style.display = 'inline-block';
-                customAirline.focus();
-            } else {
-                customFields.style.display = 'none';
-            }
-        });
-
-        function getCallsignFinal() {
-            if (callsignSelect.value === 'other') {
-                const prefix = customAirline.value.trim().toUpperCase();
-                const number = customNumber.value.trim();
-                return prefix && number ? prefix + number : "";
-            } else {
-                return "AZH" + callsignSelect.value;
-            }
+    // Lorsque l'utilisateur change le callsign
+    callsignSelect.addEventListener('change', function () {
+        if (this.value === 'other') {
+            // Afficher les champs personnalisés
+            customFields.style.display = 'inline-block';
+            customAirline.focus();
+        } else {
+            // Masquer les champs personnalisés et afficher le callsign sélectionné
+            customFields.style.display = 'none';
+            callsignDisplay.innerText = "AZH" + this.value; // Affiche le callsign sélectionné
         }
+    });
 
-        // Exemple d'utilisation :
-        // console.log(getCallsignFinal());
-    </script>
+    // Fonction pour récupérer le callsign final (si l'option "Autre" est choisie)
+    function getCallsignFinal() {
+        if (callsignSelect.value === 'other') {
+            const prefix = customAirline.value.trim().toUpperCase();
+            const number = customNumber.value.trim();
+            // Vérification que les deux champs sont remplis avant de retourner le callsign
+            if (prefix && number) {
+                return prefix + number; // Exemple: XYZ123
+            } else {
+                return ""; // Retourne une chaîne vide si les champs sont vides
+            }
+        } else {
+            return "AZH" + callsignSelect.value; // Retourne le callsign choisi dans la liste
+        }
+    }
+
+    // Afficher le callsign final après modification
+    function updateCallsign() {
+        const finalCallsign = getCallsignFinal();
+        callsignDisplay.innerText = finalCallsign ? finalCallsign : "AZH"; // Si vide, remettre AZH
+    }
+
+    // Lier la fonction à l'événement de changement des champs personnalisés
+    customAirline.addEventListener('input', updateCallsign);
+    customNumber.addEventListener('input', updateCallsign);
+
+    // Exemple d'utilisation de la fonction getCallsignFinal()
+    // console.log(getCallsignFinal()); // Affiche le callsign complet dans la console
+</script>
+
 
         <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
         <button id="resetSelectionButton" class="toggle-button">Réinitialiser les aéroports</button>
