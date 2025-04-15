@@ -89,7 +89,7 @@
         </div>
         <div class="info-box">
             <label>Callsign :</label>
-            <span style="font-weight:bold;" id="callsignDisplay">AZH</span>
+            <span style="font-weight:bold;" id="callsignDisplayPrefix">AZH</span>-<span id="callsignDisplayNumber">201</span>
             <select id="callsign" name="callsign">
                 <option value="">Sélectionner un numéro</option>
                 <option value="201">201</option>
@@ -137,15 +137,19 @@
         const customFields = document.getElementById('customCallsignFields');
         const customAirline = document.getElementById('customAirline');
         const customNumber = document.getElementById('customNumber');
-        const callsignDisplay = document.getElementById('callsignDisplay');
+        const callsignDisplayPrefix = document.getElementById('callsignDisplayPrefix');
+        const callsignDisplayNumber = document.getElementById('callsignDisplayNumber');
 
         callsignSelect.addEventListener('change', function () {
             if (this.value === 'other') {
                 customFields.style.display = 'flex';  // Affiche les champs sur une même ligne
                 customAirline.focus();
+                callsignDisplayPrefix.innerText = ''; // Ne rien afficher pour le préfixe
+                callsignDisplayNumber.innerText = ''; // Ne rien afficher pour le numéro
             } else {
                 customFields.style.display = 'none';
-                callsignDisplay.innerText = "AZH" + this.value;
+                callsignDisplayPrefix.innerText = "AZH"; // Affiche le préfixe
+                callsignDisplayNumber.innerText = this.value; // Affiche le numéro sélectionné
             }
         });
 
@@ -161,13 +165,19 @@
 
         function updateCallsign() {
             const finalCallsign = getCallsignFinal();
-            callsignDisplay.innerText = finalCallsign ? finalCallsign : "AZH";
+            if (finalCallsign) {
+                const prefix = finalCallsign.slice(0, 3); // Les 3 premiers caractères sont le préfixe
+                const number = finalCallsign.slice(3); // Le reste est le numéro
+                callsignDisplayPrefix.innerText = prefix;
+                callsignDisplayNumber.innerText = number;
+            }
         }
 
         customAirline.addEventListener('input', updateCallsign);
         customNumber.addEventListener('input', updateCallsign);
     </script>
 </body>
+    
         <h3>Afficher par catégorie</h3>
         <div id="categoryCheckboxes" class="checkbox-group"></div>
     </div>
