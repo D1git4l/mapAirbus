@@ -450,22 +450,27 @@
 
         // Charger les catégories du Sheet 2
         chargerCategories(sheetURL2);
-
-        // Fonction pour générer le plan de vol (SimBrief)
+// Fonction pour générer le plan de vol (SimBrief)
 document.getElementById('generateLinkButton').addEventListener('click', () => {
     const departure = document.getElementById('departure').innerText.trim();
     const arrival = document.getElementById('arrival').innerText.trim();
     const callsignSelect = document.getElementById('callsign');
-    let callsign = callsignSelect.value.trim();
+    let airlinePrefix = "AZH";  // Valeur par défaut pour le préfixe
+    let flightNumber = "";      // Numéro de vol par défaut vide
 
-    if (callsign === 'other') {
-        callsign = document.getElementById('customCalls').value.trim();
+    // Si un callsign personnalisé est saisi
+    if (callsignSelect.value === 'other') {
+        airlinePrefix = document.getElementById('customAirline').value.trim().toUpperCase();
+        flightNumber = document.getElementById('customNumber').value.trim();
+    } else {
+        // Si une option est sélectionnée dans la liste
+        flightNumber = callsignSelect.value;
     }
 
     // Vérifie si tous les champs sont remplis
-    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && callsign) {
-        // Crée l'URL avec callsign directement
-        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${callsign}&orig=${departure}&dest=${arrival}`;
+    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && airlinePrefix && flightNumber) {
+        // Crée l'URL avec le préfixe (Airline) et le numéro de vol
+        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airlinePrefix}&orig=${departure}&dest=${arrival}&flightno=${flightNumber}`;
         
         // Ouvre le lien dans une nouvelle fenêtre
         window.open(simBriefURL, '_blank');
@@ -473,11 +478,6 @@ document.getElementById('generateLinkButton').addEventListener('click', () => {
         alert('Veuillez entrer un callsign, un départ et une arrivée.');
     }
 });
-
-
-        
-
-
 
         // Réinitialiser la sélection des aéroports
         document.getElementById('resetSelectionButton').addEventListener('click', () => {
