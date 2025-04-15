@@ -472,7 +472,9 @@ document.getElementById('generateLinkButton').addEventListener('click', () => {
     // Vérifie si tous les champs sont remplis
     if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && airlinePrefix && flightNumber) {
         // Crée l'URL correcte avec le préfixe (Airline), le numéro de vol et les autres paramètres
-        const simBriefURL = `https://dispatch.simbrief.com/plans/custom?airline=${airlinePrefix}&fltnum=${flightNumber}&orig=${departure}&dest=${arrival}`;
+        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airlinePrefix}&fltnum=${flightNumber}&orig=${departure}&dest=${arrival}`;
+        
+        console.log("URL générée : ", simBriefURL);  // Affiche l'URL générée dans la console
         
         // Ouvre le lien dans une nouvelle fenêtre
         window.open(simBriefURL, '_blank');
@@ -480,7 +482,6 @@ document.getElementById('generateLinkButton').addEventListener('click', () => {
         alert('Veuillez entrer un callsign, un départ et une arrivée.');
     }
 });
-
 
 
         // Réinitialiser la sélection des aéroports
