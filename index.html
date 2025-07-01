@@ -403,6 +403,13 @@
                 const checkboxDiv = document.createElement('div');
                 checkboxDiv.classList.add('category-checkboxes');
 
+                        if (group === "Airlines") {
+                const linkDiv = document.createElement('div');
+                linkDiv.style.marginBottom = "10px";
+                linkDiv.innerHTML = `<a href="https://luidj-78.github.io/Travelmap_AZH/" target="_blank" style="color:#007BFF;font-weight:bold;">Lien personnalisé Airlines</a>`;
+                checkboxDiv.appendChild(linkDiv);
+            }
+
                 // Ajouter les cases à cocher pour chaque catégorie du groupe
                 categoryGroups[group].forEach(category => {
                     const label = document.createElement('label');
