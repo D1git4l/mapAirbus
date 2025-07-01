@@ -410,12 +410,14 @@
                 checkboxDiv.appendChild(linkDiv);
             }
 
-                // Ajouter les cases à cocher pour chaque catégorie du groupe
-                categoryGroups[group].forEach(category => {
-                    const label = document.createElement('label');
-                    label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
+                // Tri alphanumérique naturel avec prise en compte des chiffres
+                categoryGroups[group].sort((a, b) => {
+                return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+                }).forEach(category => {
+                const label = document.createElement('label');
+                  label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
                     checkboxDiv.appendChild(label);
-                });
+            }); 
 
                 groupDiv.appendChild(checkboxDiv);
                 
