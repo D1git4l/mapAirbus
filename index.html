@@ -33,6 +33,9 @@
             width: calc(99vw - 250px); /* Adjust for sidebar width */
             z-index: 1;
         }
+        .sidebar-large {
+            width: 265px !important; /* ou la largeur désirée */
+         }
         .info-box {
             margin-bottom: 10px;
             padding: 10px;
@@ -146,6 +149,22 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script> //larger sidebar si barre de défillement ou non
+        function checkSidebarScrollbar() {
+           const sidebar = document.getElementById('sidebar');
+           if (!sidebar) return;
+
+            // Vérifie si la sidebar déborde (scroll)
+            if (sidebar.scrollHeight > sidebar.clientHeight) {
+                sidebar.classList.add('sidebar-large');
+            } else {
+                sidebar.classList.remove('sidebar-large');
+            }
+        }
+        // Vérifie au chargement et à chaque redimensionnement
+        window.addEventListener('load', checkSidebarScrollbar);
+        window.addEventListener('resize', checkSidebarScrollbar);
+    </script>
     <script>
         const callsignSelect = document.getElementById('callsign');
         const customFields = document.getElementById('customCallsignFields');
