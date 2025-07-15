@@ -315,12 +315,14 @@
 
             rows.forEach(row => {
                 const cols = row.split(',');
-                const lat = parseFloat(cols[1].trim().replace(',', '.'));
-                const lng = parseFloat(cols[2].trim().replace(',', '.'));
-                const name = cols[0].trim();
+                const lat = parseFloat(cols[1].trim().replace(',', '.')); // colonne B
+                const lng = parseFloat(cols[2].trim().replace(',', '.')); // colonne C
+                const name = cols[0].trim(); // colonne A
                 const iconURL = cols[3].trim();  // Colonne D pour l'icône
                 const info = [cols[4].trim(), cols[5].trim(), cols[6].trim()].join(' '); // Informations supplémentaires
                 const category = cols[7].trim(); // Catégorie dans la colonne H
+                const longueur = cols[15].trim(); // colonne P
+                const altitude = cols[16].trim(); // colonne Q
                 
                 if (categories.includes(category) && !isNaN(lat) && !isNaN(lng)) {
                     // Créer une icône personnalisée
@@ -331,7 +333,12 @@
                     });
 
                     const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(`<strong>${name}</strong><br>${info}`);
+                        .bindPopup(`
+                            <strong>${name}</strong><br>
+                            ${info}<br> 
+                            longueur piste : ${longueur} ft <br> 
+                            altitude : ${altitude} ft 
+                    `);
 
                     // Ajouter le marqueur au layer de la catégorie correspondante
                     if (!layers[category]) {
