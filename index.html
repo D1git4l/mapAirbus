@@ -50,6 +50,7 @@
             cursor: pointer;
             width: 100%;
             margin-top: 5px;
+            border-radius: 5px;
         }
         .toggle-button:hover {
             background: #0056b3;
@@ -450,9 +451,9 @@
                     imgButton.className = "toggle-button";
                     imgButton.onclick = function() {
                     // Afficher l'image dans une popup au centre de la carte
-                    const popupContent = `<img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1500px;">`;
+                    const popupContent = `<div style="text-align:center;"> <img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1500px;display:block;margin:auto;"> </div>`;
                     L.popup()
-                        .setLatLng(map.getCenter())
+                        .setLatLng([-66.66311454434715, -12.875544321344405] )
                         .setContent(popupContent)
                         .openOn(map);
                     };
