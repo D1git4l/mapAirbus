@@ -451,9 +451,9 @@
                     imgButton.className = "toggle-button";
                     imgButton.onclick = function() {
                     // Afficher l'image dans une popup au centre de la carte
-                    const popupContent = `<div style="text-align:center;"> <img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1500px;display:block;margin:auto;"> </div>`;
+                    const popupContent = `<div style="text-align:center;"> <img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1300px; display:block; margin:auto;"> </div>`;
                     L.popup()
-                        .setLatLng([-66.66311454434715, -12.875544321344405] )
+                        .setLatLng([-76, -12] )
                         .setContent(popupContent)
                         .openOn(map);
                     };
