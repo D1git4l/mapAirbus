@@ -437,12 +437,27 @@
                 const checkboxDiv = document.createElement('div');
                 checkboxDiv.classList.add('category-checkboxes');
 
-                        if (group === "Airlines") {
-                const linkDiv = document.createElement('div');
-                linkDiv.style.marginBottom = "10px";
-                linkDiv.innerHTML = `<a href="https://luidj-78.github.io/Travelmap_AZH/" target="_blank" style="color:#007BFF;font-weight:bold;">Travel Map</a>`;
-                checkboxDiv.appendChild(linkDiv);
-            }
+                if (group === "Airlines") {
+                    //lien vars la travel map
+                    const linkDiv = document.createElement('div');
+                    linkDiv.style.marginBottom = "10px";
+                    linkDiv.innerHTML = `<a href="https://luidj-78.github.io/Travelmap_AZH/" target="_blank" style="color:#007BFF;font-weight:bold;">Travel Map</a>`;
+                    checkboxDiv.appendChild(linkDiv);
+
+                    // Bouton pour afficher l'image dans une popup
+                    const imgButton = document.createElement('button');
+                    imgButton.innerText = "Voir la flotte";
+                    imgButton.className = "toggle-button";
+                    imgButton.onclick = function() {
+                    // Afficher l'image dans une popup au centre de la carte
+                    const popupContent = `<img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1500px;">`;
+                    L.popup()
+                        .setLatLng(map.getCenter())
+                        .setContent(popupContent)
+                        .openOn(map);
+                    };
+                    checkboxDiv.appendChild(imgButton); 
+                }
 
                 // Tri alphanumérique naturel avec prise en compte des chiffres
                 categoryGroups[group].sort((a, b) => {
