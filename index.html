@@ -324,6 +324,7 @@
                 const category = cols[7].trim(); // Catégorie dans la colonne H
                 const longueur = cols[15].trim(); // colonne P
                 const altitude = cols[16].trim(); // colonne Q
+                const metar = [cols[18].trim(), cols[19].trim(), cols[20].trim(), cols[21].trim()].join(' ');
                 
                 if (categories.includes(category) && !isNaN(lat) && !isNaN(lng)) {
                     // Créer une icône personnalisée
@@ -337,8 +338,10 @@
                         .bindPopup(`
                             <strong>${name}</strong><br>
                             ${info}<br> 
-                            longueur piste : ${longueur} ft <br> 
-                            altitude : ${altitude} ft 
+                            dist piste : ${longueur} ft <br> 
+                            altitude : ${altitude} ft <br>
+                            ${metar}
+                            
                     `);
 
                     // Ajouter le marqueur au layer de la catégorie correspondante
