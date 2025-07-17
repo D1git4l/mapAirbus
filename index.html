@@ -340,14 +340,15 @@
                             <strong>${name}</strong><br>
                             <span id="info-short-${lat}-${lng}">${info.slice(0, 0)}... </span>
                             <span id="info-long-${lat}-${lng}" style="display:none;">
-                                ${info}
-                                dist piste : ${longueur} ft <br> 
-                                altitude : ${altitude} ft <br>
-                                ${metar}</span>
+                                ${info} <br>
+                                dist piste: ${longueur}ft <br> 
+                                altitude: ${altitude}ft <br>
+                                ${metar}<br>
+                                ${metar_full}</span>
                             <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`,
                             {
-                                maxWidth: "auto",
-                                minWidth: 100,   
+                                maxWidth: 200,
+                                minWidth: 50,   
                                 autoPan: true
                             }
                         );
