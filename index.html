@@ -75,6 +75,12 @@
         .category-group.open .category-checkboxes {
             display: block;
         }
+        .leaflet-popup-content {
+            width: auto !important;
+            max-width: none !important;
+            min-width: 100px;
+            white-space: pre-line; /* pour le retour à la ligne automatique */
+        }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
         #customCallsignFields {
@@ -338,7 +344,7 @@
                     const marker = L.marker([lat, lng], { icon: icon })
                         .bindPopup(`
                             <strong>${name}</strong><br>
-                            <span id="info-short-${lat}-${lng}">${info.slice(0, 0)}... </span>
+                            <span id="info-short-${lat}-${lng}">${info.slice(0, 0)} </span>
                             <span id="info-long-${lat}-${lng}" style="display:none;">
                                 ${info} <br>
                                 dist piste: ${longueur}ft <br> 
@@ -347,7 +353,7 @@
                                 ${metar_full}</span>
                             <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`,
                             {
-                                maxWidth: 200,
+                                maxWidth: "auto",
                                 minWidth: 50,   
                                 autoPan: true
                             }
