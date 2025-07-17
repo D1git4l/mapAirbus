@@ -344,8 +344,13 @@
                                 dist piste : ${longueur} ft <br> 
                                 altitude : ${altitude} ft <br>
                                 ${metar}</span>
-                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>
-                        `);
+                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`,
+                            {
+                                maxWidth: "auto",
+                                minWidth: 100,   
+                                autoPan: true
+                            }
+                        );
 
                     marker.on('popupopen', function(e) {
                         const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
@@ -356,11 +361,11 @@
                             if (longSpan.style.display === "none") {
                                     longSpan.style.display = "inline";
                                     shortSpan.style.display = "none";
-                                    btn.textContent = "Afficher moins";
+                                    btn.textContent = "moins";
                             } else {
                                     longSpan.style.display = "none";
                                     shortSpan.style.display = "inline";
-                                    btn.textContent = "Afficher plus";
+                                    btn.textContent = "plus";
                                 }
                             });
                         }
