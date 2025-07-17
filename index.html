@@ -75,11 +75,6 @@
         .category-group.open .category-checkboxes {
             display: block;
         }
-        .leaflet-popup-content {
-            width: auto !important;
-            max-width: none !important;
-            min-width: 25px;
-        }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
         #customCallsignFields {
@@ -350,13 +345,8 @@
                                 altitude: ${altitude}ft <br>
                                 ${metar}<br>
                                 ${metar_full}</span>
-                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`,
-                            {
-                                maxWidth: 600,
-                                minWidth: 50,   
-                                autoPan: true
-                            }
-                        );
+                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>
+                        `,);
 
                     marker.on('popupopen', function(e) {
                         const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
