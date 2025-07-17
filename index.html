@@ -324,6 +324,7 @@
                 const category = cols[7].trim(); // Catégorie dans la colonne H
                 const longueur = cols[15].trim(); // colonne P
                 const altitude = cols[16].trim(); // colonne Q
+                const metar_full = cols[17].trim(); // colonne R
                 const metar = [cols[18].trim(), cols[19].trim(), cols[20].trim(), cols[21].trim()].join(' ');
                 
                 if (categories.includes(category) && !isNaN(lat) && !isNaN(lng)) {
@@ -337,12 +338,32 @@
                     const marker = L.marker([lat, lng], { icon: icon })
                         .bindPopup(`
                             <strong>${name}</strong><br>
-                            ${info}<br> 
-                            dist piste : ${longueur} ft <br> 
+                            <span id="info-short-${lat}-${lng}">${info.slice(0, 50)}... </span>
+                            <span id="info-long-${lat}-${lng}" style="display:none;">${info}</span>
+                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">Afficher plus</button>
+                            <br>dist piste : ${longueur} ft <br> 
                             altitude : ${altitude} ft <br>
                             ${metar}
-                            
-                    `);
+                        `);
+
+                    marker.on('popupopen', function(e) {
+                        const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
+                        if (btn) {
+                            btn.addEventListener('click', function() {
+                            const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
+                            const longSpan = document.getElementById(`info-long-${lat}-${lng}`);
+                            if (longSpan.style.display === "none") {
+                                    longSpan.style.display = "inline";
+                                    shortSpan.style.display = "none";
+                                    btn.textContent = "Afficher moins";
+                            } else {
+                                    longSpan.style.display = "none";
+                                    shortSpan.style.display = "inline";
+                                    btn.textContent = "Afficher plus";
+                                }
+                            });
+                        }
+                    });
 
                     // Ajouter le marqueur au layer de la catégorie correspondante
                     if (!layers[category]) {
