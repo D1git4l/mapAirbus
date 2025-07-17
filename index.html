@@ -338,12 +338,13 @@
                     const marker = L.marker([lat, lng], { icon: icon })
                         .bindPopup(`
                             <strong>${name}</strong><br>
-                            <span id="info-short-${lat}-${lng}">${info.slice(0, 10)}... </span>
-                            <span id="info-long-${lat}-${lng}" style="display:none;">${info}</span>
-                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">Afficher plus</button>
-                            <br>dist piste : ${longueur} ft <br> 
-                            altitude : ${altitude} ft <br>
-                            ${metar}
+                            <span id="info-short-${lat}-${lng}">${info.slice(0, 0)}... </span>
+                            <span id="info-long-${lat}-${lng}" style="display:none;">
+                                ${info}
+                                dist piste : ${longueur} ft <br> 
+                                altitude : ${altitude} ft <br>
+                                ${metar}</span>
+                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>
                         `);
 
                     marker.on('popupopen', function(e) {
