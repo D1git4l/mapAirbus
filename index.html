@@ -78,6 +78,9 @@
         .toggle-large-popup {
             width: 400px;
         }
+        .texte-popup {
+            width: 350px;
+        }
         .leaflet-popup-content {
             word-break: break-word;
             white-space: normal;
@@ -345,6 +348,7 @@
 
                     const marker = L.marker([lat, lng], { icon: icon })
                         .bindPopup(`
+                            <div class="texte-popup">
                             <strong>${name}</strong><br>
                             <span id="info-short-${lat}-${lng}">${info.slice(0, 0)} </span>
                             <span id="info-long-${lat}-${lng}" style="display:none;">
@@ -353,7 +357,8 @@
                                 altitude: ${altitude}ft <br>
                                 ${metar}<br>
                                 ${metar_full}</span>
-                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`,
+                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`
+                                   </div>,
                         );
 
                     marker.on('popupopen', function(e) {
