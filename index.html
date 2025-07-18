@@ -75,6 +75,10 @@
         .category-group.open .category-checkboxes {
             display: block;
         }
+        .leaflet-popup-content-wrapper {
+            min-width: 180px; 
+            max-width: 400px; 
+        }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
         #customCallsignFields {
@@ -84,7 +88,7 @@
         }
 
         #customCallsignFields input {
-            width: 80px; /* Taille ajustée */
+            width: 80px;
         }
     </style>
 </head>
@@ -353,17 +357,18 @@
                         const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
                         if (btn) {
                             btn.addEventListener('click', function() {
-                            const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
-                            const longSpan = document.getElementById(`info-long-${lat}-${lng}`);
-                            if (longSpan.style.display === "none") {
-                                    longSpan.style.display = "inline";
-                                    shortSpan.style.display = "none";
-                                    btn.textContent = "moins";
-                            } else {
-                                    longSpan.style.display = "none";
-                                    shortSpan.style.display = "inline";
-                                    btn.textContent = "plus";
+                                const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
+                                const longSpan = document.getElementById(`info-long-${lat}-${lng}`);
+                                if (longSpan.style.display === "none") {
+                                        longSpan.style.display = "inline";
+                                        shortSpan.style.display = "none";
+                                        btn.textContent = "moins";
+                                } else {
+                                        longSpan.style.display = "none";
+                                        shortSpan.style.display = "inline";
+                                        btn.textContent = "plus";
                                 }
+                                marker.getPopup().update();
                             });
                         }
                     });
