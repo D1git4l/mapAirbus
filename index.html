@@ -78,6 +78,10 @@
         .toggle-large-popup {
             width: 400px;
         }
+        .leaflet-popup-content {
+            word-break: break-word;
+            white-space: normal;
+        }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
         #customCallsignFields {
@@ -349,8 +353,9 @@
                                 altitude: ${altitude}ft <br>
                                 ${metar}<br>
                                 ${metar_full}</span>
-                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>
-                        `,);
+                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`,
+                            { maxWidth: 400, className: 'ma-popup' }
+                        );
 
                     marker.on('popupopen', function(e) {
                         const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
