@@ -362,6 +362,7 @@
                     marker.on('popupopen', function(e) {
                         const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
                         const popupElem = document.querySelector('.leaflet-popup');
+                        popupElem.classList.add('toggle-small-popup');
                         if (btn) {
                             btn.addEventListener('click', function() {
                                 const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
