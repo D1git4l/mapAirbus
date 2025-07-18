@@ -75,6 +75,9 @@
         .category-group.open .category-checkboxes {
             display: block;
         }
+        .toggle-desc-btn {
+            width: 400px;
+        }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
         #customCallsignFields {
@@ -358,10 +361,12 @@
                                 if (longSpan.style.display === "none") {
                                         longSpan.style.display = "inline";
                                         shortSpan.style.display = "none";
+                                        btn.classList.add('toggle-desc-btn');
                                         btn.textContent = "moins";
                                 } else {
                                         longSpan.style.display = "none";
                                         shortSpan.style.display = "inline";
+                                        btn.classList.remove('toggle-desc-btn');
                                         btn.textContent = "plus";
                                 }
                             });
