@@ -75,7 +75,7 @@
         .category-group.open .category-checkboxes {
             display: block;
         }
-        .toggle-desc-btn {
+        .toggle-large-popup {
             width: 400px;
         }
 
@@ -354,6 +354,7 @@
 
                     marker.on('popupopen', function(e) {
                         const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
+                        const popupElem = document.querySelector('.leaflet-popup');
                         if (btn) {
                             btn.addEventListener('click', function() {
                                 const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
@@ -361,12 +362,12 @@
                                 if (longSpan.style.display === "none") {
                                         longSpan.style.display = "inline";
                                         shortSpan.style.display = "none";
-                                        btn.classList.add('toggle-desc-btn');
+                                        popupElem.classList.add('toggle-large-popup');
                                         btn.textContent = "moins";
                                 } else {
                                         longSpan.style.display = "none";
                                         shortSpan.style.display = "inline";
-                                        btn.classList.remove('toggle-desc-btn');
+                                        popupElem.classList.remove('toggle-large-popup');
                                         btn.textContent = "plus";
                                 }
                             });
