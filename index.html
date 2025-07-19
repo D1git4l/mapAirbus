@@ -157,7 +157,8 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script> //larger sidebar si barre de défillement ou non
+    
+    <script> //largeur sidebar si barre de défillement ou non
         function checkSidebarScrollbar() {
            const sidebar = document.getElementById('sidebar');
            if (!sidebar) return;
@@ -173,6 +174,7 @@
         window.addEventListener('load', checkSidebarScrollbar);
         window.addEventListener('resize', checkSidebarScrollbar);
     </script>
+    
     <script>
         const callsignSelect = document.getElementById('callsign');
         const customFields = document.getElementById('customCallsignFields');
