@@ -75,17 +75,12 @@
         .category-group.open .category-checkboxes {
             display: block;
         }
-        .toggle-large-popup {
-            width: 700px;
-        }
-        .toggle-small-popup {
-            width: 100px;
-        }
         .leaflet-popup-content {
             word-break: break-word;
             white-space: normal;
             max-width: 700px;
             min-width: 70px;
+            width: "auto";
         }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
@@ -364,7 +359,6 @@
                     marker.on('popupopen', function(e) {
                         const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
                         const popupElem = document.querySelector('.leaflet-popup');
-                        popupElem.classList.add('toggle-small-popup');
                         if (btn) {
                             btn.addEventListener('click', function() {
                                 const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
@@ -372,14 +366,10 @@
                                 if (longSpan.style.display === "none") {
                                         longSpan.style.display = "inline";
                                         shortSpan.style.display = "none";
-                                        popupElem.classList.remove('toggle-small-popup');
-                                        popupElem.classList.add('toggle-large-popup');
                                         btn.textContent = "moins";
                                 } else {
                                         longSpan.style.display = "none";
                                         shortSpan.style.display = "inline";
-                                        popupElem.classList.remove('toggle-large-popup');
-                                        popupElem.classList.add('toggle-small-popup');
                                         btn.textContent = "plus";
                                 }
                             });
