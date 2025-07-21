@@ -84,7 +84,7 @@
             text-wrap: nowrap;
         }
         .toggle-large-popup {
-            width: max-content !important;
+            width: 250px !important;
         }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
@@ -369,6 +369,7 @@
                             btn.addEventListener('click', function() {
                                 const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
                                 const longSpan = document.getElementById(`info-long-${lat}-${lng}`);
+                                popupElem.classList.remove('toggle-large-popup');
                                 if (longSpan.style.display === "none") {
                                         longSpan.style.display = "inline";
                                         shortSpan.style.display = "none";
