@@ -83,6 +83,9 @@
             width: "auto";
             text-wrap: pretty;
         }
+        .toggle-large-popup {
+            width: 300px;
+        }
 
         /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
         #customCallsignFields {
@@ -369,10 +372,12 @@
                                 if (longSpan.style.display === "none") {
                                         longSpan.style.display = "inline";
                                         shortSpan.style.display = "none";
+                                        popupElem.classList.add('toggle-large-popup');
                                         btn.textContent = "moins";
                                 } else {
                                         longSpan.style.display = "none";
                                         shortSpan.style.display = "inline";
+                                        popupElem.classList.remove('toggle-large-popup');
                                         btn.textContent = "plus";
                                 }
                             });
