@@ -339,9 +339,6 @@
                 const altitude = cols[16].trim(); // colonne Q
                 const metar_full = cols[17].trim(); // colonne R
                 const metar = [cols[18].trim(), cols[19].trim(), cols[20].trim(), cols[21].trim()].join(' ');
-
-                let url_site_metar = "https://metar-taf.com/fr/metar/";
-                let metar_url = url_site_metar + name;
                 
                 if (categories.includes(category) && !isNaN(lat) && !isNaN(lng)) {
                     // Créer une icône personnalisée
