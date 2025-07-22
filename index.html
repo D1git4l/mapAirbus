@@ -342,8 +342,6 @@
 
                 let url_site_metar = "https://metar-taf.com/fr/metar/";
                 let metar_url = url_site_metar + name;
-                const linkDiv_metar = document.createElement('div');
-                    linkDiv_metar.innerHTML = `<a href=metar_url target="_blank" style="color:#007BFF;">metar complet</a>`;
                 
                 if (categories.includes(category) && !isNaN(lat) && !isNaN(lng)) {
                     // Créer une icône personnalisée
@@ -363,7 +361,7 @@
                                 dist piste: ${longueur}ft <br> 
                                 altitude: ${altitude}ft <br>
                                 ${metar}<br>
-                                <a href=metar_url target="_blank">metar complet</a> <br> </span>
+                                <a href="https://metar-taf.com/fr/metar/${name}" target="_blank">metar complet</a> <br> </span>
                             <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`
                         );
 
