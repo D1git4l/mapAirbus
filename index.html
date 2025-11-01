@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css">
     <!-- Ajout feuille de style radar -->
     <link rel="stylesheet" href="src/leaflet-radar.css" />
-    <script src="src/leaflet-radar.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -164,8 +163,9 @@
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="src/leaflet-radar.js"></script>
     
-    <script> //largeur sidebar si barre de défillement ou non
+    <script> //largeur sidebar si barre de défilement ou non
         function checkSidebarScrollbar() {
            const sidebar = document.getElementById('sidebar');
            if (!sidebar) return;
@@ -324,8 +324,8 @@
         });
 
         // URLs pour les fichiers CSV
-        const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv'; //...
-        const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=751406940&single=true&output=csv'; //...
+        const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv';
+        const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=751406940&single=true&output=csv';
 
         // Fonction pour charger les marqueurs depuis les CSV
         async function chargerMarqueurs(sheetURL, categories) {
@@ -359,7 +359,7 @@
                         .bindPopup(`
                             <strong>${name}</strong><br>
                             <span id="info-short-${lat}-${lng}">${info.slice(0, 0)} </span>
-                            <span id="info-long-${lat}-${lng}" style="display:none;">
+                            <span id="info-long-${lat}-${{lng}" style="display:none;">
                                 ${info} <br>
                                 dist piste: ${longueur}ft <br> 
                                 altitude: ${altitude}ft <br>
@@ -374,7 +374,7 @@
                         if (btn) {
                             btn.addEventListener('click', function() {
                                 const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
-                                const longSpan = document.getElementById(`info-long-${lat}-${lng}`);
+                                const longSpan = document.getElementById(`info-long-${lat}-${{lng}`);
                                 popupElem.classList.remove('toggle-large-popup');
                                 if (longSpan.style.display === "none") {
                                         longSpan.style.display = "inline";
@@ -501,7 +501,7 @@
                     imgButton.className = "toggle-button";
                     imgButton.onclick = function() {
                     // Afficher l'image dans une popup au centre de la carte
-                    const popupContent = `<div style="text-align:center; margin:0; padding:0;"> <img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1400px; display:block; margin[...]
+                    const popupContent = `<div style="text-align:center; margin:0; padding:0;"> <img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1400px; display:block; m[...]`;
                     L.popup({ maxWidth: 1400, minWidth: 1400 })
                         .setLatLng([-80, 0] )
                         .setContent(popupContent)
@@ -558,37 +558,35 @@
         chargerCategories(sheetURL2);
 
         // Fonction pour générer le plan de vol (SimBrief)
-document.getElementById('generateLinkButton').addEventListener('click', () => {
-    const departure = document.getElementById('departure').innerText.trim();
-    const arrival = document.getElementById('arrival').innerText.trim();
-    const callsignSelect = document.getElementById('callsign');
-    let airlinePrefix = "AZH";  // Valeur par défaut pour le préfixe
-    let flightNumber = "";      // Numéro de vol par défaut vide
+        document.getElementById('generateLinkButton').addEventListener('click', () => {
+            const departure = document.getElementById('departure').innerText.trim();
+            const arrival = document.getElementById('arrival').innerText.trim();
+            const callsignSelect = document.getElementById('callsign');
+            let airlinePrefix = "AZH";  // Valeur par défaut pour le préfixe
+            let flightNumber = "";      // Numéro de vol par défaut vide
 
-    // Si un callsign personnalisé est saisi
-    if (callsignSelect.value === 'other') {
-        airlinePrefix = document.getElementById('customAirline').value.trim().toUpperCase();
-        flightNumber = document.getElementById('customNumber').value.trim();
-    } else {
-        // Si une option est sélectionnée dans la liste
-        flightNumber = callsignSelect.value;
-    }
+            // Si un callsign personnalisé est saisi
+            if (callsignSelect.value === 'other') {
+                airlinePrefix = document.getElementById('customAirline').value.trim().toUpperCase();
+                flightNumber = document.getElementById('customNumber').value.trim();
+            } else {
+                // Si une option est sélectionnée dans la liste
+                flightNumber = callsignSelect.value;
+            }
 
-    // Vérifie si tous les champs sont remplis
-    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && airlinePrefix && flightNumber) {
-        // Crée l'URL correcte avec le préfixe (Airline), le numéro de vol et les autres paramètres
-        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airlinePrefix}&fltnum=${flightNumber}&orig=${departure}&dest=${arrival}`;
-        
-        console.log("URL générée : ", simBriefURL);  // Affiche l'URL générée dans la console
-        
-        // Ouvre le lien dans une nouvelle fenêtre
-        window.open(simBriefURL, '_blank');
-    } else {
-        alert('Veuillez entrer un callsign, un départ et une arrivée.');
-    }
-});
-
-
+            // Vérifie si tous les champs sont remplis
+            if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && airlinePrefix && flightNumber) {
+                // Crée l'URL correcte avec le préfixe (Airline), le numéro de vol et les autres paramètres
+                const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airlinePrefix}&fltnum=${flightNumber}&orig=${departure}&dest=${arrival}`;
+                
+                console.log("URL générée : ", simBriefURL);  // Affiche l'URL générée dans la console
+                
+                // Ouvre le lien dans une nouvelle fenêtre
+                window.open(simBriefURL, '_blank');
+            } else {
+                alert('Veuillez entrer un callsign, un départ et une arrivée.');
+            }
+        });
 
         // Réinitialiser la sélection des aéroports
         document.getElementById('resetSelectionButton').addEventListener('click', () => {
