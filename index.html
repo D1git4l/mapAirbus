@@ -1,612 +1,362 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte avec marqueurs</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-measure/dist/leaflet-measure.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-        }
-        #sidebar {
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Travel Map Azgharie Airlines</title>
+        <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+            #header {
                 position: fixed;
-                left: 0;
-                top: 0;
-                width: 250px;
-                height: 100vh;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: auto;
+                max-width: calc(100% - 40px);
+                min-width: 280px;
+                height: 50px;
                 background: #f4f4f4;
-                padding: 10px;
+                padding: 0 10px;
+                box-sizing: border-box; 
                 box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+                border-radius: 10px;
                 overflow-y: auto;
                 text-align: left;
-                z-index: 2;
-        }
-        #map {
-            position: fixed;
-            top: 0;
-            right: 0;
-            height: 100vh;
-            width: calc(99vw - 250px); /* Adjust for sidebar width */
-            z-index: 1;
-        }
-        .sidebar-large {
-            width: 265px !important; /* ou la largeur désirée */
-         }
-        .info-box {
-            margin-bottom: 10px;
-            padding: 10px;
-            background: white;
-            border: 1px solid #ccc;
-        }
-        .toggle-button {
-            background: #007BFF;
-            color: white;
-            padding: 10px;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 5px;
-            border-radius: 5px;
-        }
-        .toggle-button:hover {
-            background: #0056b3;
-        }
-        .checkbox-group {
-            margin-top: 20px;
-        }
-        .category-group {
-            margin-top: 20px;
-        }
-        .category-group h4 {
-            font-size: 16px;
-            font-weight: bold;
-        }
-        .category-checkboxes {
-            display: none;
-            margin-left: 20px;
-        }
-        .category-checkboxes label {
-            display: block;
-        }
-        .category-group.open .category-checkboxes {
-            display: block;
-        }
-        .leaflet-popup-content {
-            word-break: break-word;
-            white-space: normal;
-            max-width: 1500px;
-            min-width: 70px;
-            width: 70;
-            text-wrap: nowrap;
-        }
-        .toggle-large-popup {
-            width: 250px !important;
-        }
+                overflow: hidden;
+                z-index: 25;
+            }
+            #map {
+                z-index: 1;
+            }
+            .topnav {
+                display: flex;
+                background-color: #333;
+                align-items: center;
+                white-space: nowrap;
+            }
+            .topnav a {
+              color: #f2f2f2;
+              text-align: center;
+              padding: 0 12px;
+              text-decoration: none;
+              font-size: 17px;
+              display: inline-flex;
+              align-items: center;
+              height: 100%;
+            }
+            .topnav a img {
+              display: block;
+              height: 40px;
+            }
+            .topnav a:hover {
+              background-color: #ddd;
+              color: black;
+            }
+            .topnav a.active {
+              background-color: #04AA6D;
+              color: white;
+            }
 
-        /* Ajouter les styles pour aligner préfixe et numéro sur la même ligne */
-        #customCallsignFields {
-            display: flex;
-            gap: 10px;
-            margin-top: 5px;
-        }
+            #main_body {
+                position: fixed;
+                top: 70px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 870px;
+                height: 650px;
+                background: #f4f4f4;
+                padding: 0 10px;
+                box-sizing: border-box; 
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+                border-radius: 10px;
+                text-align: center;
+                z-index: 24;
+            }
+            #logo_azh_airline{
+                position: fixed;
+                top: 40px;
+                left: 50%;
+                transform: translateX(-150%);
+                width: 250px;
+                height: 250px;
+                z-index: 25;
+            }
+            #description_1 {
+                position: fixed;
+                top: 60px;
+                left: 50%;
+                transform: translateX(-16%);
+                width: 435px;
+                height: 250px;
+                background: #f4f4f4;
+                box-sizing: border-box; 
+                text-align: justify;
+                text-justify: inter-word;
+                z-index: 25;
+            }
+            #description_2 {
+                position: fixed;
+                top: 310px;
+                left: 50%;
+                transform: translateX(-150%);
+                width: 250px;
+                height: 250px;
+                background: #f4f4f4;
+                box-sizing: border-box; 
+                text-align: justify;
+                text-justify: inter-word;
+                z-index: 25;
+            }
+            #infographie_azh{
+                position: fixed;
+                top: 290px;
+                left: 50%;
+                transform: translateX(-15%);
+                width: 440px;
+                height: auto;
+                z-index: 25;
+            }
+        </style>
+    </head>
 
-        #customCallsignFields input {
-            width: 80px;
-        }
-    </style>
-</head>
-<body>
-    <div id="sidebar">
-        <h2>Azgharie Airlines</h2>
-        <div class="info-box">
-            Départ: <span id="departure" class="clickable">Non sélectionné</span>
-            <input type="text" id="departureInput" style="display:none" placeholder="Entrez un aéroport">
-        </div>
-        <div class="info-box">
-            Arrivée: <span id="arrival" class="clickable">Non sélectionné</span>
-            <input type="text" id="arrivalInput" style="display:none" placeholder="Entrez un aéroport">
-        </div>
-        <div class="info-box">
-            <label>Callsign :</label>
-            <span style="font-weight:bold;" id="callsignDisplayPrefix">AZH</span>-<span id="callsignDisplayNumber">201</span>
-            <select id="callsign" name="callsign">
-                <option value="">Sélectionner un numéro</option>
-                <option value="201">201</option>
-                <option value="202">202</option>
-                <option value="203">203</option>
-                <option value="204">204</option>
-                <option value="205">205</option>
-                <option value="206">206</option>
-                <option value="FR">FR</option>
-                <option value="US">US</option>
-                <option value="ACC">ACC</option>
-                <option value="501">501</option>
-                <option value="502">502</option>
-                <option value="503">503</option>
-                <option value="513">513</option>
-                <option value="523">523</option>
-                <option value="533">533</option>
-                <option value="504">504</option>
-                <option value="505">505</option>
-                <option value="515">515</option>
-                <option value="506">506</option>
-                <option value="516">516</option>
-                <option value="507">507</option>
-                <option value="517">517</option>
-                <option value="other">Autre (saisir un callsign)</option>
-            </select>
-            <div id="customCallsignFields" style="display:none;">
-                <input type="text" id="customAirline" placeholder="Préfixe (ex: XYZ)">
-                <input type="text" id="customNumber" placeholder="Numéro (ex: 123)">
+    <body>           
+        <div id="main_body">
+            <h3> Bienvenue sur le planificateur de vol de l'Azgharie Airlines</h3>
+            
+            <div id="logo_azh_airline">
+                <div style="display: flex; align-items: center;">
+                    <img src="azgharie_airlines_transparent.png" alt="azgharie_airlines_transparent.png" style="height: 250px;">
+                </div>
+            </div>
+            <div id="description_1">
+                <p> 
+                    L'Azgharie Airlines est une
+                    <a href="https://fshub.io/airline/AZH/overview" target="_blank" style="color:#679fd5;font-weight:bold;text-decoration:none;"> compagnie aérienne virtuelle </a>
+                    créé sur FShub
+                </p>
+                <p> 
+                    <a href="https://fshub.io/" target="_blank" style="color:#ED8A00;font-weight:bold;text-decoration:none;"> FShub </a>
+                    est un service en ligne gratuit de suivi de vol qui fonctionne avec plusieurs plateforme comme microsoft flim simulator ou X-Plane
+                </p>
+                <p> 
+                    Cette compagnie a été créer et est gérer par la communauté du vidéaste et Leader Supreme
+                    <a href="https://twitch.tv/azghaaar" target="_blank" style="color:#9146FF;font-weight:bold;text-decoration:none;"> Azghaaar </a>
+                    sur
+                    <a href="https://discord.gg/azgharie" target="_blank" style="color:#5865F2;font-weight:bold;text-decoration:none;"> Discord </a>
+                </p>
+            </div>
+            <div id="description_2">
+                <p> 
+                    Ici, vous pourrez planifier et créer un plan de vol simbrief pour réaliser différentes activités 
+                </p>
+                <p> 
+                    Toute ces activités sont gérer par un 
+                    <a href="https://docs.google.com/spreadsheets/d/1XeNSL5uGvEs2YffUxcDWHfenT37o2l4nxruZBqnaiMU" target="_blank" style="color:#79D600;font-weight:bold;text-decoration:none;"> google sheet </a>
+                    et éxpliqué sur ce 
+                    <a href="https://docs.google.com/document/d/19_WjD9vYB-2mGxpQB1473cOVo0jc73eOQXmo3w12W6o/edit?tab=t.0" target="_blank" style="color:#000ED6;font-weight:bold;text-decoration:none;"> document </a>
+                </p>
+                <p> 
+                    Une carte dédié permet d'afficher le voyage des lignes de la compagnie
+                </p>
+            </div>
+            <div id="infographie_azh">
+                <div style="display: flex; align-items: center;">
+                    <img src="Infographie_AZH-1024x724.jpg" alt="Infographie_AZH-1024x724.jpg" style=" width: 440px;">
+                </div>
             </div>
         </div>
 
-        <!-- Boutons pour la génération et réinitialisation -->
-        <button id="generateLinkButton" class="toggle-button">Générer le plan de vol</button>
-        <button id="resetSelectionButton" class="toggle-button">Réinitialiser les aéroports</button>
-        <div id="distanceBox" class="info-box" style="display:none;">
-            Distance: <span id="distance">0</span> milles nautiques
-            <br>
-            Temps de vol: <span id="flightTime">0</span> heures
+        <div id="header" class="topnav">
+            <a href="https://www.azgharie.net/" target="_blank"> <img src="azgharie-removebg-preview.png" alt="azgharie-removebg-preview.png" style="height: 50px">  </a>
+            <a href="https://luidj-78.github.io/Travelmap_AZH/test/" style="color:#007BFF;font-weight:bold;"> Accueil </a>
+            <a href="https://luidj-78.github.io/Travelmap_AZH/planificateur/" style="color:#007BFF;font-weight:bold;"> Planificateur de vol </a>
+            <a href="https://luidj-78.github.io/Travelmap_AZH/passager/" style="color:#007BFF;font-weight:bold;"> Passager </a>
+            <a href="https://luidj-78.github.io/Travelmap_AZH/cargo/" style="color:#007BFF;font-weight:bold;"> cargo </a>
         </div>
 
-        <h3>Afficher par catégorie</h3>
-        <div id="categoryCheckboxes" class="checkbox-group"></div>
-    </div>
+       <div id="map" style="position: absolute; top: 0px; left: 0; bottom: 0; right: 0;"></div>
 
-    <div id="map"></div>
+        <script>
+            //affichage de la map en fond           
+            var map = L.map('map', {zoomControl: false}).setView([48.8566, 2.3522], 4);
+            L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', { attribution: "&copy; OpenStreetMap contributeurs" }).addTo(map);
 
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    
-    <script> //largeur sidebar si barre de défillement ou non
-        function checkSidebarScrollbar() {
-           const sidebar = document.getElementById('sidebar');
-           if (!sidebar) return;
-
-            // Vérifie si la sidebar déborde (scroll)
-            if (sidebar.scrollHeight > sidebar.clientHeight) {
-                sidebar.classList.add('sidebar-large');
-            } else {
-                sidebar.classList.remove('sidebar-large');
-            }
-        }
-        // Vérifie au chargement et à chaque redimensionnement
-        window.addEventListener('load', checkSidebarScrollbar);
-        window.addEventListener('resize', checkSidebarScrollbar);
-    </script>
-    
-    <script>
-        const callsignSelect = document.getElementById('callsign');
-        const customFields = document.getElementById('customCallsignFields');
-        const customAirline = document.getElementById('customAirline');
-        const customNumber = document.getElementById('customNumber');
-        const callsignDisplayPrefix = document.getElementById('callsignDisplayPrefix');
-        const callsignDisplayNumber = document.getElementById('callsignDisplayNumber');
-
-        callsignSelect.addEventListener('change', function () {
-            if (this.value === 'other') {
-                customFields.style.display = 'flex';  // Affiche les champs sur une même ligne
-                customAirline.focus();
-                callsignDisplayPrefix.innerText = ''; // Ne rien afficher pour le préfixe
-                callsignDisplayNumber.innerText = ''; // Ne rien afficher pour le numéro
-            } else {
-                customFields.style.display = 'none';
-                callsignDisplayPrefix.innerText = "AZH"; // Affiche le préfixe
-                callsignDisplayNumber.innerText = this.value; // Affiche le numéro sélectionné
-            }
-        });
-
-        function getCallsignFinal() {
-            if (callsignSelect.value === 'other') {
-                const prefix = customAirline.value.trim().toUpperCase();
-                const number = customNumber.value.trim();
-                return prefix && number ? prefix + number : "";
-            } else {
-                return "AZH" + callsignSelect.value;
-            }
-        }
-
-        function updateCallsign() {
-            const finalCallsign = getCallsignFinal();
-            if (finalCallsign) {
-                const prefix = finalCallsign.slice(0, 3); // Les 3 premiers caractères sont le préfixe
-                const number = finalCallsign.slice(3); // Le reste est le numéro
-                callsignDisplayPrefix.innerText = prefix;
-                callsignDisplayNumber.innerText = number;
-            }
-        }
-
-        customAirline.addEventListener('input', updateCallsign);
-        customNumber.addEventListener('input', updateCallsign);
-
-        const map = L.map('map').setView([20, 0], 2);
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributeurs'
-        }).addTo(map);
-
-        const layers = {}; // Chaque catégorie sera un layer distinct
-        let departureMarker = null;
-        let arrivalMarker = null;
-        let currentSelection = ''; // Suivi de la sélection Départ/Arrivée
-        let routeLine = null;  // Variable pour stocker la ligne tracée
-
-        // Fonction pour gérer l'entrée manuelle d'aéroport
-        function handleAirportInput(inputId, markerType) {
-            const input = document.getElementById(inputId);
-            const name = input.value.trim();
-            if (name) {
-                // Recherche de l'aéroport via OpenStreetMap API
-                fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${name}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data && data.length > 0) {
-                            const lat = parseFloat(data[0].lat);
-                            const lon = parseFloat(data[0].lon);
-                            const popupMessage = `${name}<br>Latitude: ${lat}<br>Longitude: ${lon}`;
-                            
-                            // En fonction de l'aéroport de départ ou d'arrivée, on place le marqueur
-                            if (markerType === 'departure') {
-                                if (departureMarker) {
-                                    map.removeLayer(departureMarker); // Retirer le précédent marqueur
-                                }
-                                departureMarker = L.marker([lat, lon]).addTo(map)
-                                    .bindPopup(popupMessage)
-                                    .openPopup();
-                                document.getElementById('departure').innerText = name;
-                            } else if (markerType === 'arrival') {
-                                if (arrivalMarker) {
-                                    map.removeLayer(arrivalMarker); // Retirer le précédent marqueur
-                                }
-                                arrivalMarker = L.marker([lat, lon]).addTo(map)
-                                    .bindPopup(popupMessage)
-                                    .openPopup();
-                                document.getElementById('arrival').innerText = name;
-                            }
-
-                            // Fermer le champ de texte après la saisie
-                            input.style.display = 'none';
-
-                            // Si un départ et une arrivée sont sélectionnés, on calcule la distance
-                            if (departureMarker && arrivalMarker) {
-                                calculateDistanceAndTime(departureMarker.getLatLng(), arrivalMarker.getLatLng());
-                            }
-                        } else {
-                            alert("Aéroport introuvable, veuillez vérifier le nom.");
-                        }
-                    })
-                    .catch(error => {
-                        alert("Erreur lors de la recherche de l'aéroport.");
-                        console.error(error);
-                    });
-            }
-        }
-
-        // Fonction pour calculer la distance et le temps de vol
-        function calculateDistanceAndTime(departureLatLng, arrivalLatLng) {
-            const distance = departureLatLng.distanceTo(arrivalLatLng) / 1852;  // Convertir la distance en milles nautiques
-            const flightTime = (distance / 500).toFixed(2);  // Temps de vol estimé (500 knots)
+            /** RainViewer radar animation part * @type {number[]} */
+            var apiData = {};
+            var mapFrames = [];
+            var lastPastFramePosition = -1;
+            var radarLayers = [];
+            var optionKind = 'radar'; // can be 'radar' or 'satellite'
+            var optionTileSize = 256; // can be 256 or 512.
+            var optionColorScheme = 2; // from 0 to 8. Check the https://rainviewer.com/api/color-schemes.html for additional information
+            var optionSmoothData = 1; // 0 - not smooth, 1 - smooth
+            var optionSnowColors = 1; // 0 - do not show snow colors, 1 - show snow colors
+            var optionExtension = 'webp'; // possible values: 'webp', 'png'
+            var animationPosition = 0;
+            var animationTimer = false;
+            var loadingTilesCount = 0;
+            var loadedTilesCount = 0;
             
-            document.getElementById('distance').innerText = distance.toFixed(2);
-            document.getElementById('flightTime').innerText = flightTime;
-            document.getElementById('distanceBox').style.display = 'block'; // Afficher les infos de distance/temps
-        }
-
-        // Ajouter des événements pour chaque champ d'aéroport
-        document.getElementById('departure').addEventListener('click', () => {
-            currentSelection = 'departure';  // Indiquer qu'on sélectionne l'aéroport de départ
-            document.getElementById('departureInput').style.display = 'block';  // Afficher le champ de saisie
-            document.getElementById('arrivalInput').style.display = 'none';     // Cacher l'autre champ
-        });
-
-        document.getElementById('arrival').addEventListener('click', () => {
-            currentSelection = 'arrival';  // Indiquer qu'on sélectionne l'aéroport d'arrivée
-            document.getElementById('arrivalInput').style.display = 'block';     // Afficher le champ de saisie
-            document.getElementById('departureInput').style.display = 'none';    // Cacher l'autre champ
-        });
-
-        // Ajouter des événements pour la saisie manuelle d'aéroport (quand on sort du champ de texte)
-        document.getElementById('departureInput').addEventListener('blur', () => {
-            handleAirportInput('departureInput', 'departure');
-        });
-
-        document.getElementById('arrivalInput').addEventListener('blur', () => {
-            handleAirportInput('arrivalInput', 'arrival');
-        });
-
-        // URLs pour les fichiers CSV
-        const sheetURL1 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1380793282&single=true&output=csv'; //onglet MAP
-        const sheetURL2 = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=751406940&single=true&output=csv'; //onglet MAP_2
-
-        // Fonction pour charger les marqueurs depuis les CSV
-        async function chargerMarqueurs(sheetURL, categories) {
-            const response = await fetch(sheetURL);
-            const text = await response.text();
-            const rows = text.split('\n').slice(1); // Ignorer la première ligne
-
-            rows.forEach(row => {
-                const cols = row.split(',');
-                const lat = parseFloat(cols[1].trim().replace(',', '.')); // colonne B
-                const lng = parseFloat(cols[2].trim().replace(',', '.')); // colonne C
-                const name = cols[0].trim(); // colonne A
-                const iconURL = cols[3].trim();  // Colonne D pour l'icône
-                const info = [cols[4].trim(), cols[5].trim(), cols[6].trim()].join(' '); // Informations supplémentaires
-                const category = cols[7].trim(); // Catégorie dans la colonne H
-                const longueur = cols[15].trim(); // colonne P
-                const altitude = cols[16].trim(); // colonne Q
-                const metar_full = cols[17].trim(); // colonne R
-                const metar = [cols[18].trim(), cols[19].trim(), cols[20].trim(), cols[21].trim()].join(' ');
-                
-                if (categories.includes(category) && !isNaN(lat) && !isNaN(lng)) {
-                    // Créer une icône personnalisée
-                    const icon = L.icon({
-                        iconUrl: iconURL,
-                        iconSize: [30, 30],  // Taille de l'icône (ajustez si nécessaire)
-                        iconAnchor: [15, 30], // Position de l'ancre de l'icône
-                        popupAnchor: [0, 0],
-                    });
-
-                    const marker = L.marker([lat, lng], { icon: icon })
-                        .bindPopup(`
-                            <strong>${name}</strong><br>
-                            <span id="info-short-${lat}-${lng}">${info.slice(0, 0)} </span>
-                            <span id="info-long-${lat}-${lng}" style="display:none;">
-                                ${info} <br>
-                                dist piste: ${longueur}ft <br> 
-                                altitude: ${altitude}ft <br>
-                                ${metar}<br>
-                                <a href="https://metar-taf.com/fr/metar/${name}" target="_blank">metar complet</a> <br> </span>
-                            <button id="toggle-desc-${lat}-${lng}" style="margin-top:5px;">plus</button>`
-                        );
-
-                    marker.on('popupopen', function(e) {
-                        const btn = document.getElementById(`toggle-desc-${lat}-${lng}`);
-                        const popupElem = document.querySelector('.leaflet-popup');
-                        if (btn) {
-                            btn.addEventListener('click', function() {
-                                const shortSpan = document.getElementById(`info-short-${lat}-${lng}`);
-                                const longSpan = document.getElementById(`info-long-${lat}-${lng}`);
-                                popupElem.classList.remove('toggle-large-popup');
-                                if (longSpan.style.display === "none") {
-                                        longSpan.style.display = "inline";
-                                        shortSpan.style.display = "none";
-                                        popupElem.classList.add('toggle-large-popup');
-                                        btn.textContent = "moins";
-                                } else {
-                                        longSpan.style.display = "none";
-                                        shortSpan.style.display = "inline";
-                                        popupElem.classList.remove('toggle-large-popup');
-                                        btn.textContent = "plus";
-                                }
-                            });
-                        }
-                    });
-
-                    // Ajouter le marqueur au layer de la catégorie correspondante
-                    if (!layers[category]) {
-                        layers[category] = L.layerGroup(); // Créer un layer pour cette catégorie si nécessaire
-                    }
-                    layers[category].addLayer(marker);
-
-                    // Ajouter un gestionnaire de clic sur chaque marqueur
-                    marker.on('click', function() {
-                        if (currentSelection === 'departure') {
-                            document.getElementById('departure').innerText = name;
-                            if (departureMarker) {
-                                map.removeLayer(departureMarker); // Supprimer le marqueur précédent
-                            }
-                            departureMarker = marker;
-                            if (arrivalMarker) {
-                                calculateDistanceAndTime(departureMarker.getLatLng(), arrivalMarker.getLatLng());
-                            }
-                        } else if (currentSelection === 'arrival') {
-                            document.getElementById('arrival').innerText = name;
-                            if (arrivalMarker) {
-                                map.removeLayer(arrivalMarker); // Supprimer le marqueur précédent
-                            }
-                            arrivalMarker = marker;
-                            if (departureMarker) {
-                                calculateDistanceAndTime(departureMarker.getLatLng(), arrivalMarker.getLatLng());
-                            }
-                        }
-                    });
-                }
-            });
-        }
-
-        // Fonction pour calculer la distance et le temps de vol
-        function calculateDistanceAndTime(depCoords, arrCoords) {
-            const distanceInKm = depCoords.distanceTo(arrCoords) / 1000; // Convertir en kilomètres
-            const distanceInNauticalMiles = distanceInKm * 0.53996; // Conversion en milles nautiques
-
-            // Calcul du temps de vol en heures
-            const flightTimeInHours = distanceInKm / 600; // Vitesse de 800 km/h
-            const flightTimeInMinutes = Math.round(flightTimeInHours * 60); // Convertir en minutes
-
-            document.getElementById('distance').innerText = distanceInNauticalMiles.toFixed(2);
-            document.getElementById('flightTime').innerText = (flightTimeInMinutes / 60).toFixed(2);
-
-            document.getElementById('distanceBox').style.display = 'block';
-
-            // Si une ligne existe déjà, on la retire avant de dessiner la nouvelle
-            if (routeLine) {
-                map.removeLayer(routeLine);
+            function startLoadingTile() {
+                loadingTilesCount++;    
+            }
+            function finishLoadingTile() { // Delayed increase loaded count to prevent changing the layer before it will be replaced by next
+                setTimeout(function() { loadedTilesCount++; }, 250);
+            }
+            function isTilesLoading() {
+                return loadingTilesCount > loadedTilesCount;
             }
 
-            // Tracer la ligne entre le Départ et l'Arrivée
-            routeLine = L.polyline([depCoords, arrCoords], {color: 'blue'}).addTo(map);
-        }
+            /** Load all the available maps frames from RainViewer API*/
+            var apiRequest = new XMLHttpRequest();
+            apiRequest.open("GET", "https://api.rainviewer.com/public/weather-maps.json", true);
+            apiRequest.onload = function(e) { // store the API response for re-use purposes in memory
+                apiData = JSON.parse(apiRequest.response);
+                initialize(apiData, optionKind);
+            };
+            apiRequest.send();
 
-        // Fonction pour récupérer les catégories à partir du Sheet (colonne H)
-        async function chargerCategories(sheetURL) {
-            const response = await fetch(sheetURL);
-            const text = await response.text();
-            const rows = text.split('\n').slice(1); // Ignorer la première ligne
-
-            const categories = new Set();
-            rows.forEach(row => {
-                const cols = row.split(',');
-                if (cols[7]) categories.add(cols[7].trim()); // Colonne H pour les catégories
-            });
-
-            console.log('Catégories chargées:', categories);
-
-            // Organiser les catégories par premier mot
-            const categoryGroups = {};
-            categories.forEach(category => {
-                const firstWord = category.split(' ')[0];
-                if (!categoryGroups[firstWord]) {
-                    categoryGroups[firstWord] = [];
+            /** Initialize internal data from the API response and options*/
+            function initialize(api, kind) {
+                // remove all already added tiled layers
+                for (var i in radarLayers) {
+                    map.removeLayer(radarLayers[i]);
                 }
-                categoryGroups[firstWord].push(category);
-            });
-
-            // Créer l'HTML pour les catégories triées et espacées
-            const categoryCheckboxes = document.getElementById('categoryCheckboxes');
-            Object.keys(categoryGroups).sort().forEach(group => {
-                const groupDiv = document.createElement('div');
-                groupDiv.classList.add('category-group');
-
-                // Ajouter un titre pour chaque groupe (avec un bouton pour ouvrir/fermer)
-                const groupTitle = document.createElement('h4');
-                groupTitle.innerText = group;
-                groupTitle.addEventListener('click', () => {
-                    groupDiv.classList.toggle('open');
-                });
-                groupDiv.appendChild(groupTitle);
-
-                // Ajouter un div pour les cases à cocher de chaque catégorie
-                const checkboxDiv = document.createElement('div');
-                checkboxDiv.classList.add('category-checkboxes');
-
-                if (group === "Airlines") {
-                    //lien vars la travel map
-                    const linkDiv = document.createElement('div');
-                    linkDiv.style.marginBottom = "10px";
-                    linkDiv.innerHTML = `<a href="https://luidj-78.github.io/Travelmap_AZH/" target="_blank" style="color:#007BFF;font-weight:bold;">Travel Map</a>`;
-                    checkboxDiv.appendChild(linkDiv);
-
-                    // Bouton pour afficher l'image dans une popup
-                    const imgButton = document.createElement('button');
-                    imgButton.innerText = "Afficher les avions possible";
-                    imgButton.className = "toggle-button";
-                    imgButton.onclick = function() {
-                    // Afficher l'image dans une popup au centre de la carte
-                    const popupContent = `<div style="text-align:center; margin:0; padding:0;"> <img src="liste_avion_possible.png" alt="Flotte Airlines" style="max-width:1400px; display:block; margin:auto;"> </div>`;
-                    L.popup({ maxWidth: 1400, minWidth: 1400 })
-                        .setLatLng([-80, 0] )
-                        .setContent(popupContent)
-                        .openOn(map);
-                    };
-                    checkboxDiv.appendChild(imgButton); 
+                mapFrames = [];
+                radarLayers = [];
+                animationPosition = 0;
+                if (!api) {
+                    return;
                 }
+                if (kind == 'satellite' && api.satellite && api.satellite.infrared) {
+                    mapFrames = api.satellite.infrared;
+                    lastPastFramePosition = api.satellite.infrared.length - 1;
+                    showFrame(lastPastFramePosition, true);
+                }
+                else if (api.radar && api.radar.past) {
+                    mapFrames = api.radar.past;
+                    if (api.radar.nowcast) {
+                        mapFrames = mapFrames.concat(api.radar.nowcast);
+                    } // show the last "past" frame
+                    lastPastFramePosition = api.radar.past.length - 1;
+                    showFrame(lastPastFramePosition, true);
+                }
+            }
+            
+            /** Animation functions * @param path - Path to the XYZ tile */
+            function addLayer(frame) {
+                if (!radarLayers[frame.path]) {
+                    var colorScheme = optionKind == 'satellite' ? optionColorScheme == 255 ? 255 : 0 : optionColorScheme;
+                    var smooth = optionKind == 'satellite' ? 0 : optionSmoothData;
+                    var snow = optionKind == 'satellite' ? 0 : optionSnowColors;
+                    var source = new L.TileLayer(apiData.host + frame.path + '/' + optionTileSize + '/{z}/{x}/{y}/' + colorScheme + '/' + smooth + '_' + snow + '.' + optionExtension, {
+                        tileSize: 256,
+                        opacity: 0.01,
+                        zIndex: frame.time
+                    }); // Track layer loading state to not display the overlay before it will completelly loads
+                    source.on('loading', startLoadingTile);
+                    source.on('load', finishLoadingTile); 
+                    source.on('remove', finishLoadingTile);
+                    radarLayers[frame.path] = source;
+                }
+                if (!map.hasLayer(radarLayers[frame.path])) {
+                    map.addLayer(radarLayers[frame.path]);
+                }
+            }
 
-                // Tri alphanumérique naturel avec prise en compte des chiffres
-                categoryGroups[group].sort((a, b) => {
-                return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
-                }).forEach(category => {
-                const label = document.createElement('label');
-                  label.innerHTML = `<input type="checkbox" class="categoryCheckbox" value="${category}"> ${category}`;
-                    checkboxDiv.appendChild(label);
-            }); 
+            /** Display particular frame of animation for the @position
+             * If preloadOnly parameter is set to true, the frame layer only adds for the tiles preloading purpose
+             * @param position * @param preloadOnly * @param force - display layer immediatelly */
+            function changeRadarPosition(position, preloadOnly, force) {
+                while (position >= mapFrames.length) {
+                    position -= mapFrames.length;
+                }
+                while (position < 0) {
+                    position += mapFrames.length;
+                }
+                var currentFrame = mapFrames[animationPosition];
+                var nextFrame = mapFrames[position];
+                addLayer(nextFrame);
+                 // Quit if this call is for preloading only by design or some times still loading in background
+                if (preloadOnly || (isTilesLoading() && !force)) {
+                    return;
+                }
+                animationPosition = position;
+                if (radarLayers[currentFrame.path]) {
+                    radarLayers[currentFrame.path].setOpacity(0);
+                }
+                radarLayers[nextFrame.path].setOpacity(100);
+                var pastOrForecast = nextFrame.time > Date.now() / 1000 ? 'FORECAST' : 'PAST';
+                document.getElementById("timestamp").innerHTML = pastOrForecast + ': ' + (new Date(nextFrame.time * 1000)).toString();
+            }
 
-                groupDiv.appendChild(checkboxDiv);
-                
-                // Ajouter chaque groupe au conteneur principal
-                categoryCheckboxes.appendChild(groupDiv);
-            });
+            /** Check avialability and show particular frame position from the timestamps list*/
+            function showFrame(nextPosition, force) {
+                var preloadingDirection = nextPosition - animationPosition > 0 ? 1 : -1;
+                changeRadarPosition(nextPosition, false, force);
+                // preload next next frame (typically, +1 frame) if don't do that, the animation will be blinking at the first loop
+                changeRadarPosition(nextPosition + preloadingDirection, true);
+            }
 
-            // Ajouter l'événement de changement sur chaque case à cocher
-            document.querySelectorAll('.categoryCheckbox').forEach(checkbox => {
-                checkbox.addEventListener('change', function() {
-                    const category = this.value;
-                    console.log(`Case cochée pour la catégorie: ${category}`);
+            /** Stop the animation * Check if the animation timeout is set and clear it. */
+            function stop() {
+                if (animationTimer) {
+                    clearTimeout(animationTimer);
+                    animationTimer = false;
+                    return true;
+                }
+                return false;
+            }
+            function play() {
+                showFrame(animationPosition + 1);
+                // Main animation driver. Run this function every 500 ms
+                animationTimer = setTimeout(play, 500);
+            }
+            function playStop() {
+                if (!stop()) {
+                    play();
+                }
+            }
 
-                    if (this.checked) {
-                        // Si la case est cochée, ajouter le layer
-                        if (layers[category]) {
-                            console.log(`Ajout du layer pour ${category}`);
-                            map.addLayer(layers[category]);
-                        }
-                    } else {
-                        // Si la case est décochée, retirer le layer
-                        if (layers[category]) {
-                            console.log(`Retrait du layer pour ${category}`);
-                            map.removeLayer(layers[category]);
-                        }
-                    }
-                });
-            });
+            /**  Change map options */
+            function setKind(kind) {
+                optionKind = kind;
+                initialize(apiData, optionKind);
+            }
+            function setColors() {
+                var e = document.getElementById('colors');
+                optionColorScheme = e.options[e.selectedIndex].value;
+                initialize(apiData, optionKind);
+            }
+            function setWebp() {
+                optionExtension = document.getElementById('webp').checked ? 'webp' : 'png';
+                initialize(apiData, optionKind);
+            }
 
-            // Charger les marqueurs pour les catégories
-            chargerMarqueurs(sheetURL, Array.from(categories));
-        }
-
-        // Charger les catégories du Sheet 1
-        chargerCategories(sheetURL1);
-
-        // Charger les catégories du Sheet 2
-        chargerCategories(sheetURL2);
-
-        // Fonction pour générer le plan de vol (SimBrief)
-document.getElementById('generateLinkButton').addEventListener('click', () => {
-    const departure = document.getElementById('departure').innerText.trim();
-    const arrival = document.getElementById('arrival').innerText.trim();
-    const callsignSelect = document.getElementById('callsign');
-    let airlinePrefix = "AZH";  // Valeur par défaut pour le préfixe
-    let flightNumber = "";      // Numéro de vol par défaut vide
-
-    // Si un callsign personnalisé est saisi
-    if (callsignSelect.value === 'other') {
-        airlinePrefix = document.getElementById('customAirline').value.trim().toUpperCase();
-        flightNumber = document.getElementById('customNumber').value.trim();
-    } else {
-        // Si une option est sélectionnée dans la liste
-        flightNumber = callsignSelect.value;
-    }
-
-    // Vérifie si tous les champs sont remplis
-    if (departure !== "Non sélectionné" && arrival !== "Non sélectionné" && airlinePrefix && flightNumber) {
-        // Crée l'URL correcte avec le préfixe (Airline), le numéro de vol et les autres paramètres
-        const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airlinePrefix}&fltnum=${flightNumber}&orig=${departure}&dest=${arrival}`;
-        
-        console.log("URL générée : ", simBriefURL);  // Affiche l'URL générée dans la console
-        
-        // Ouvre le lien dans une nouvelle fenêtre
-        window.open(simBriefURL, '_blank');
-    } else {
-        alert('Veuillez entrer un callsign, un départ et une arrivée.');
-    }
-});
-
-
-
-        // Réinitialiser la sélection des aéroports
-        document.getElementById('resetSelectionButton').addEventListener('click', () => {
-            departureMarker = null;
-            arrivalMarker = null;
-            document.getElementById('departure').innerText = 'Non sélectionné';
-            document.getElementById('arrival').innerText = 'Non sélectionné';
-            map.removeLayer(routeLine);
-            routeLine = null;
-            document.getElementById('distanceBox').style.display = 'none';
-        });
-
-        // Fonction pour gérer le mode de sélection (Départ ou Arrivée)
-        document.getElementById('departure').addEventListener('click', () => {
-            currentSelection = 'departure';
-            document.getElementById('departureInput').style.display = 'block';
-            document.getElementById('arrivalInput').style.display = 'none';
-        });
-
-        document.getElementById('arrival').addEventListener('click', () => {
-            currentSelection = 'arrival';
-            document.getElementById('arrivalInput').style.display = 'block';
-            document.getElementById('departureInput').style.display = 'none';
-        });
-    </script>
-</body>
+            /** Handle arrow keys for navigation between next \ prev frames */
+            document.onkeydown = function (e) {
+                e = e || window.event;
+                switch (e.which || e.keyCode) {
+                    case 37: // left
+                        stop();
+                        showFrame(animationPosition - 1, true);
+                        break;
+                    case 39: // right
+                        stop();
+                        showFrame(animationPosition + 1, true);
+                        break;
+                    default:
+                        return; // exit this handler for other keys
+                }
+                e.preventDefault();
+                return false;
+            }
+        </script>
+    </body>
 </html>
