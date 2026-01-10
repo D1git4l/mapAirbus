@@ -17,7 +17,8 @@
                     left: 10px;
                     top: 10px;
                     width: 250px;
-                    height: 95vh;
+                    bottom: 10px;
+                    /*height: 95vh;*/
                     background: #f4f4f4;
                     padding: 10px;
                     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
@@ -40,11 +41,39 @@
                 box-sizing: border-box; 
                 box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
                 border-radius: 10px;
-                overflow-y: auto;
+                overflow: visible;
                 text-align: left;
-                overflow: hidden;
-                z-index: 2;
+                z-index: 3;
             }
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+            .dropdown-content {
+                display: none;
+                position: absolute;
+                background-color: #f9f9f9;
+                min-width: 155px;
+                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                z-index: 3;
+                left: 0;
+                top: 100%;
+                border-radius: 0px 0px 10px 10px;
+                text-align: center;
+            }
+            .dropdown-content a {
+                color: black;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: block;
+            }
+            .dropdown-content a:hover {
+                background-color: #ddd;
+            }
+            .dropdown:hover .dropdown-content {
+                display: block;
+            }
+            
             #map {
                     z-index: 1;
             }
@@ -200,9 +229,6 @@
                 <option value="516">516</option>
                 <option value="507">507</option>
                 <option value="517">517</option>
-                <option value="1">1</option>
-                <option value="1001">1001</option>
-                <option value="1002">1002</option>
                 <option value="other">Autre (saisir un callsign)</option>
             </select>
             <div id="customCallsignFields" style="display:none;">
@@ -225,12 +251,25 @@
     </div>
 
         <div id="header" class="topnav">
+            <script>const baseUrl = "https://d1git4l.github.io/mapAirbus/";</script>
             <a href="https://www.azgharie.net/" target="_blank"> <img src="azgharie-removebg-preview.png" alt="azgharie-removebg-preview.png" style="height: 50px">  </a>
-            <a href="https://d1git4l.github.io/mapAirbus/" style="color:#007BFF;font-weight:bold;"> Accueil </a>
+            <a href="#" onclick="window.location.href=baseUrl" style="color:#007BFF;font-weight:bold;">Acceuil</a>
             <a href="https://fshub.io/airline/AZH/radar" target="_blank" style="color:#007BFF;font-weight:bold;"> Radar </a>
-            <a href="https://d1git4l.github.io/mapAirbus/planificateur/" style="color:#007BFF;font-weight:bold;"> Planificateur de vol </a>
-            <a href="https://d1git4l.github.io/mapAirbus/passager/" style="color:#007BFF;font-weight:bold;"> Passager </a>
-            <a href="https://d1git4l.github.io/mapAirbus/cargo/" style="color:#007BFF;font-weight:bold;"> Cargo </a>
+            <a href="#" onclick="window.location.href=baseUrl + 'planificateur/'" style="color:#007BFF;font-weight:bold;">Planificateur de vol</a>
+            <div class="dropdown" style="display: inline-block; height: 100%;">
+                <a href="#" style="color:#007BFF;font-weight:bold;height: 100%;display: flex;align-items: center;padding: 0 12px;">Carte de voyage</a>
+                <div class="dropdown-content">
+                    <a href="#" onclick="window.location.href=baseUrl + 'passager/'" style="color:#007BFF;font-weight:bold;">Passager </a> <br />
+                    <a href="#" onclick="window.location.href=baseUrl + 'cargo/'" style="color:#007BFF;font-weight:bold;">Cargo</a>
+                </div>
+            </div>
+            <div class="dropdown" style="display: inline-block; height: 100%;">
+                <a href="#" style="color:#007BFF;font-weight:bold;height: 100%;display: flex;align-items: center;padding: 0 12px;">Base de donnée</a>
+                <div class="dropdown-content">
+                    <a href="#" onclick="window.location.href=baseUrl + 'database/avion/'" style="color:#007BFF;font-weight:bold;">Avion </a> <!--<br />
+                    <a href="#" onclick="window.location.href=baseUrl + 'database/aeroport/'" style="color:#007BFF;font-weight:bold;">Aéroport</a>-->
+                </div>
+            </div>
         </div>
     
     <div id="map" style="position: absolute; top: 0px; left: 0; bottom: 0; right: 0;"></div>
@@ -255,8 +294,6 @@
                 <option value="8">Dark Sky</option>
                 <option value="255">Raw Source</option>
             </select></li>
-
-            <li>WebP <input type="checkbox" id="webp" checked="checked" onchange="setWebp(); return;" /></li>
         </ul>  
         <div id="timestamp" style="text-align:center; position: absolute;top: 50px; left: 0; right: 0; height: 80px;">FRAME TIME</div>
     </div>
