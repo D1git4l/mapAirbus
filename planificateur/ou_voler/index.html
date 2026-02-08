@@ -1,0 +1,735 @@
+    <!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Travel Map Azgharie Airlines</title>
+        <link href="https://unpkg.com/leaflet/dist/leaflet.css" rel="stylesheet"/>
+        <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css">
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/wnumb/1.2.0/wNumb.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+		
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+            #header {
+                position: fixed;
+                top: 10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: auto;
+                max-width: calc(100% - 40px);
+                min-width: 280px;
+                height: 50px;
+                background: #f4f4f4;
+                padding: 0 10px;
+                box-sizing: border-box; 
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+                border-radius: 10px;
+                overflow: visible;
+                text-align: left;
+                z-index: 3;
+            }
+            .dropdown {
+                position: relative;
+                display: inline-block;
+            }
+            .dropdown-content {
+                display: none;
+                position: absolute;
+                background-color: #f9f9f9;
+                min-width: 155px;
+                box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+                z-index: 3;
+                left: 0;
+                top: 100%;
+                border-radius: 0px 0px 10px 10px;
+                text-align: center;
+            }
+            .dropdown-content a {
+                color: black;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: block;
+				margine-top: 5px;
+                margin-bottom: 5px;
+            }
+            .dropdown-content a:hover {
+                background-color: #ddd;
+            }
+            .dropdown:hover .dropdown-content {
+                display: block;
+            }
+            
+            #map {
+                z-index: 1;
+            }
+            .topnav {
+                display: flex;
+                background-color: #333;
+                align-items: center;
+                white-space: nowrap;
+            }
+            .topnav a {
+              color: #f2f2f2;
+              text-align: center;
+              padding: 0 12px;
+              text-decoration: none;
+              font-size: 17px;
+              display: inline-flex;
+              align-items: center;
+              height: 100%;
+            }
+            .topnav a img {
+              display: block;
+              height: 40px;
+            }
+            .topnav a:hover {
+              background-color: #ddd;
+              color: black;
+            }
+            .topnav a.active {
+              background-color: #04AA6D;
+              color: white;
+            }
+
+            #radar_control {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 750px;
+                height: 75px;
+                background: #f4f4f4;
+                padding: 0 10px;
+                box-sizing: border-box; 
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+                border-radius: 10px;
+                text-align: center;
+                z-index: 2;
+				display: none;
+            }
+            li {
+                list-style: none;
+                display: inline-block;
+            }
+			#radarToggleTooltip {
+				display: none;
+				position: fixed;
+				background-color: rgba(0, 0, 0, 0.8);
+				color: white;
+				padding: 5px 10px;
+				border-radius: 5px;
+				font-size: 14px;
+				z-index: 3;
+				pointer-events: none;
+			}
+            
+            #sidebar {
+                    position: fixed;
+                    left: 10px;
+                    top: 10px;
+                    width: 400px;
+                    bottom: 10px;
+                    background: #f4f4f4;
+                    padding: 10px;
+                    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+                    border-radius: 10px;
+                    overflow-y: auto;
+                    text-align: left;
+                    z-index: 2;
+            }
+			#slider_range_flight_time{
+				width: 305px;
+				position: relative;
+                left: 30px;
+			}
+			#slider_range_flight_time .noUi-handle-lower {
+    			right: 0px;
+			}
+			#slider_range_flight_time .noUi-handle-upper {
+    			right: -30px;
+			}
+			
+			#boutton_vol_passager,
+			#boutton_vol_cargo,
+			#boutton_generer_simbrief_passager,
+			#boutton_generer_simbrief_cargo{
+   				display: none;
+			}
+            .boutton_vol {
+                background: #007bff;
+                color: white;
+                border-radius: 5px;
+                padding: 10px;
+                border: none;
+                cursor: pointer;
+                width: 90%;
+                margin-top: 5px;
+				text-align: center;
+            }
+            .boutton_vol:hover {
+                background: #0056b3;
+            }
+			.boutton_vol.active {
+                background: #28a745;
+                color: white;
+
+        </style>
+    </head>
+
+    <body>           
+        <div id="header" class="topnav">
+            <script>const baseUrl = "https://d1git4l.github.io/mapAirbus/";</script>
+            <a href="https://www.azgharie.net/" target="_blank"> <img src="azgharie-removebg-preview.png" alt="azgharie-removebg-preview.png" style="height: 50px">  </a>
+            <a href="#" onclick="window.location.href=baseUrl" style="color:#007BFF;font-weight:bold;">Acceuil</a>
+            <a href="https://fshub.io/airline/AZH/radar" target="_blank" style="color:#007BFF;font-weight:bold;"> Radar </a>          
+            <div class="dropdown" style="display: inline-block; height: 100%;">
+                <a href="#" onclick="window.location.href=baseUrl + 'planificateur/'" style="color:#007BFF;font-weight:bold;height: 100%;display: flex;align-items: center;padding: 0 12px;">Planificateur de vol</a>
+                <div class="dropdown-content" style="width: 180px;">
+                    <a href="#" onclick="window.location.href=baseUrl + 'planificateur/ou_voler/'" style="color:#007BFF;font-weight:bold;">Ou voler ? </a>
+                </div>
+            </div>
+            <div class="dropdown" style="display: inline-block; height: 100%;">
+                <a href="#" style="color:#007BFF;font-weight:bold;height: 100%;display: flex;align-items: center;padding: 0 12px;">Carte de voyage</a>
+                <div class="dropdown-content">
+                    <a href="#" onclick="window.location.href=baseUrl + 'passager/'" style="color:#007BFF;font-weight:bold;">Passager </a> <br />
+                    <a href="#" onclick="window.location.href=baseUrl + 'cargo/'" style="color:#007BFF;font-weight:bold;">Cargo</a>
+                </div>
+            </div>
+            <div class="dropdown" style="display: inline-block; height: 100%;">
+                <a href="#" style="color:#007BFF;font-weight:bold;height: 100%;display: flex;align-items: center;padding: 0 12px;">Base de donnée</a>
+                <div class="dropdown-content">
+                    <a href="#" onclick="window.location.href=baseUrl + 'database/avion/'" style="color:#007BFF;font-weight:bold;">Avion </a> <!--<br />
+                    <a href="#" onclick="window.location.href=baseUrl + 'database/aeroport/'" style="color:#007BFF;font-weight:bold;">Aéroport</a>-->
+                </div>
+            </div>
+        </div>
+
+        <div id="radar_control">
+            <ul>
+                <li><input type="button" onclick="stop(); showFrame(animationPosition - 1); return;" value="&lt;" /></li>
+                <li><input type="button" onclick="playStop();" value="Play / Stop" /></li>
+                <li><input type="button" onclick="stop(); showFrame(animationPosition + 1); return;" value="&gt;" /></li>
+
+                <li><select id="colors" onchange="setColors(); return;">
+                    <option value="0">Black and White Values</option>
+                    <option value="1">Original</option>
+                    <option value="2" selected="selected">Universal Blue</option>
+                    <option value="3">TITAN</option>
+                    <option value="4">The Weather Channel</option>
+                    <option value="5">Meteored</option>
+                    <option value="6">NEXRAD Level-III</option>
+                    <option value="7">RAINBOW @ SELEX-SI</option>
+                    <option value="8">Dark Sky</option>
+                    <option value="255">Raw Source</option>
+                </select></li>
+            </ul>  
+            <div id="timestamp" style="text-align:center; position: absolute;top: 50px; left: 0; right: 0; height: 80px;">FRAME TIME</div>
+        </div>
+		<div id="radarToggleTooltip" >Afficher/Masquer les contrôles radar</div>
+
+       <div id="map" style="position: absolute; top: 0px; left: 0; bottom: 0; right: 0;"></div>
+
+        <div id="sidebar">
+			<h2>Ou voler ?</h2>
+			<p>
+  				<label for="range_flight_time" >Temps de vol désiré:</label>
+  				<input type="text" id="range_flight_time" readonly="" style="border:0; color:#007BFF; font-weight:bold;">
+			</p>
+			<div id="slider_range_flight_time"></div>
+			<br />
+			<button id="boutton_cherchez_un_vol" class="boutton_vol">cherchez un vol</button>
+			<br />
+			<div id="loading" style="display: none; text-align: center;">
+    			<img src="https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExMTlwMW1zMDJucTh5OWRrNGQzZjR4bml6ZnBzbHJsMDR4MjQxNW44cyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/KG4PMQ0jyimywxNt8i/giphy.gif" alt="Chargement..." style="width: 150px; height: 150px; margin: 50px auto;"/>
+			</div>
+			<button id="boutton_vol_passager" class="boutton_vol"> </button>
+			<button id="boutton_vol_cargo" class="boutton_vol"> </button>
+			<button id="boutton_generer_simbrief_passager" class="boutton_vol"> Générer le plan de vol simbrief </button>
+			<button id="boutton_generer_simbrief_cargo" class="boutton_vol"> Générer le plan de vol simbrief</button>
+			<div style=" position: absolute; top: 500px;">
+				<a>L'Azgharie Airlines permet l'ouverture de lignes permanente de transport de passager. Ouvrir des nouvelles lignes permet d'augmenter le choix de vol de l'outil.</a>
+				<a>Pour faire une demande d'ouverture de ligne, rendez-vous dans l'onglet "liste des lignes" du </a>
+				<a href="https://docs.google.com/spreadsheets/d/1XeNSL5uGvEs2YffUxcDWHfenT37o2l4nxruZBqnaiMU" target="_blank" style="color:#79D600;font-weight:bold;text-decoration:none;"> google sheet </a>
+			</div>
+        </div>
+
+    <script> //affichage de la map, controle et météo
+            const map = L.map("map", {zoomControl: false}).setView([20, 0], 2);
+			L.control.zoom({position: 'bottomright'}).addTo(map);
+			L.Control.RadarControlToggle = L.Control.extend({ // Créer un contrôle personnalisé pour afficher/masquer la div radar_control
+				onAdd: function(map) {
+				var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+					container.style.backgroundColor = 'white';
+					container.style.width = '30px';
+					container.style.height = '30px';
+					container.style.cursor = 'pointer';
+					container.style.border = '2px solid rgba(0,0,0,0.2)';
+					container.style.borderRadius = '4px';
+					container.style.marginBottom = '15px';
+					container.style.fontSize = '20px';
+					container.style.textAlign = 'center';
+					container.innerHTML = '📡'; // Icône radar
+					
+					L.DomEvent.on(container, 'mouseover', function(e) { // Ajouter les événements mouseover et mouseout
+						var tooltip = document.getElementById('radarToggleTooltip');
+						var rect = container.getBoundingClientRect();
+						tooltip.style.display = 'block';
+						tooltip.style.left = (rect.left + window.scrollX - 95) + 'px';
+						tooltip.style.top = (rect.top + window.scrollY - 45) + 'px'; // Positionner au-dessus du bouton
+					});
+					L.DomEvent.on(container, 'mouseout', function(e) {
+						document.getElementById('radarToggleTooltip').style.display = 'none';
+					});
+
+					L.DomEvent.on(container, 'click', function() {
+						var radarControlDiv = document.getElementById('radar_control');
+						if (radarControlDiv.style.display === 'block') {
+							radarControlDiv.style.display = 'none';
+						} else {
+							radarControlDiv.style.display = 'block';
+						}
+					});
+					return container;
+				}
+			});
+			map.addControl(new L.Control.RadarControlToggle({ position: 'bottomright' })); // Ajouter le contrôle personnalisé à la carte
+			
+            // Grouper les layers de base
+            var clair = L.tileLayer('https://{s}.tile.openstreetmap.fr/osmfr/{z}/{x}/{y}.png', { attribution: 'clair' });
+            //var sombre = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', { attribution: 'sombre' });
+            var topographique = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution: 'topographique' });
+            var satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution: 'Satellite' });
+			var sansradar = L.layerGroup([]);
+			var radar = L.layerGroup([]);
+            var baseLayers = {
+                "clair": clair,
+                //"sombre": sombre,
+                "topographique": topographique,
+                "Satellite": satellite,
+            };
+			var overLayers = {
+				"Radar météo": radar,
+            };
+            // Ajouter le contrôle à la carte
+            L.control.layers(baseLayers, overLayers).addTo(map);
+			map.addLayer(clair);
+			map.addLayer(radar);
+            
+            /** RainViewer radar animation part * @type {number[]} */
+            var apiData = {};
+            var mapFrames = [];
+            var lastPastFramePosition = -1;
+            var radarLayers = [];
+            var optionKind = 'radar'; // can be 'radar' or 'satellite'
+            var optionTileSize = 256; // can be 256 or 512.
+            var optionColorScheme = 2; // from 0 to 8. Check the https://rainviewer.com/api/color-schemes.html for additional information
+            var optionSmoothData = 1; // 0 - not smooth, 1 - smooth
+            var optionSnowColors = 1; // 0 - do not show snow colors, 1 - show snow colors
+            var optionExtension = 'webp'; // possible values: 'webp', 'png'
+            var animationPosition = 0;
+            var animationTimer = false;
+            var loadingTilesCount = 0;
+            var loadedTilesCount = 0;
+            
+            function startLoadingTile() {
+                loadingTilesCount++;    
+            }
+            function finishLoadingTile() { // Delayed increase loaded count to prevent changing the layer before it will be replaced by next
+                setTimeout(function() { loadedTilesCount++; }, 250);
+            }
+            function isTilesLoading() {
+                return loadingTilesCount > loadedTilesCount;
+            }
+
+            /** Load all the available maps frames from RainViewer API*/
+            var apiRequest = new XMLHttpRequest();
+            apiRequest.open("GET", "https://api.rainviewer.com/public/weather-maps.json", true);
+            apiRequest.onload = function(e) { // store the API response for re-use purposes in memory
+                apiData = JSON.parse(apiRequest.response);
+                initialize(apiData, optionKind);
+            };
+            apiRequest.send();
+
+            /** Initialize internal data from the API response and options*/
+			function initialize(api, kind) {
+				radar.clearLayers(); // Supprimer toutes les couches radar existantes
+				mapFrames = [];
+				radarLayers = [];
+				animationPosition = 0;
+				if (!api) {
+					return;
+				}
+				if (api.radar && api.radar.past) {
+					mapFrames = api.radar.past;
+					if (api.radar.nowcast) {
+						mapFrames = mapFrames.concat(api.radar.nowcast);
+					}
+					lastPastFramePosition = api.radar.past.length - 1;
+					showFrame(lastPastFramePosition, true);
+				}
+			}
+            
+            /** Animation functions * @param path - Path to the XYZ tile */
+			function addLayer(frame) {
+				if (!radarLayers[frame.path]) {
+					var colorScheme = optionKind == 'satellite' ? optionColorScheme == 255 ? 255 : 0 : optionColorScheme;
+					var smooth = optionKind == 'satellite' ? 0 : optionSmoothData;
+					var snow = optionKind == 'satellite' ? 0 : optionSnowColors;
+					var source = new L.TileLayer(apiData.host + frame.path + '/' + optionTileSize + '/{z}/{x}/{y}/' + colorScheme + '/' + smooth + '_' + snow + '.' + optionExtension, {
+						tileSize: 256,
+						opacity: 0.01,
+						zIndex: frame.time
+					});
+					source.on('loading', startLoadingTile);
+					source.on('load', finishLoadingTile);
+					source.on('remove', finishLoadingTile);
+					radarLayers[frame.path] = source;
+				}
+				if (!radar.hasLayer(radarLayers[frame.path])) {
+					radar.addLayer(radarLayers[frame.path]);
+				}
+			}
+
+            /** Display particular frame of animation for the @position
+             * If preloadOnly parameter is set to true, the frame layer only adds for the tiles preloading purpose
+             * @param position * @param preloadOnly * @param force - display layer immediatelly */
+            function changeRadarPosition(position, preloadOnly, force) {
+                while (position >= mapFrames.length) {
+                    position -= mapFrames.length;
+                }
+                while (position < 0) {
+                    position += mapFrames.length;
+                }
+                var currentFrame = mapFrames[animationPosition];
+                var nextFrame = mapFrames[position];
+                addLayer(nextFrame);
+                 // Quit if this call is for preloading only by design or some times still loading in background
+                if (preloadOnly || (isTilesLoading() && !force)) {
+                    return;
+                }
+                animationPosition = position;
+                if (radarLayers[currentFrame.path]) {
+                    radarLayers[currentFrame.path].setOpacity(0);
+                }
+                radarLayers[nextFrame.path].setOpacity(100);
+                var pastOrForecast = nextFrame.time > Date.now() / 1000 ? 'FORECAST' : 'PAST';
+                document.getElementById("timestamp").innerHTML = pastOrForecast + ': ' + (new Date(nextFrame.time * 1000)).toString();
+            }
+
+            /** Check avialability and show particular frame position from the timestamps list*/
+            function showFrame(nextPosition, force) {
+                var preloadingDirection = nextPosition - animationPosition > 0 ? 1 : -1;
+                changeRadarPosition(nextPosition, false, force);
+                // preload next next frame (typically, +1 frame) if don't do that, the animation will be blinking at the first loop
+                changeRadarPosition(nextPosition + preloadingDirection, true);
+            }
+
+            /** Stop the animation * Check if the animation timeout is set and clear it. */
+            function stop() {
+                if (animationTimer) {
+                    clearTimeout(animationTimer);
+                    animationTimer = false;
+                    return true;
+                }
+                return false;
+            }
+            function play() {
+                showFrame(animationPosition + 1);
+                // Main animation driver. Run this function every 500 ms
+                animationTimer = setTimeout(play, 500);
+            }
+            function playStop() {
+                if (!stop()) {
+                    play();
+                }
+            }
+
+            /**  Change map options */
+            function setKind(kind) { 
+                optionKind = kind;
+                if (kind === 'sansradar') {// Supprimer tous les layers radar existants
+					map.removeLayer(radar);
+					document.getElementById("timestamp").innerHTML = "Radar désactivé"
+                } else if (kind === 'radar') {
+					initialize(apiData, optionKind);
+				}
+            }
+            function setColors() {
+                var e = document.getElementById('colors');
+                optionColorScheme = e.options[e.selectedIndex].value;
+                initialize(apiData, optionKind);
+            }
+            function setWebp() {
+                optionExtension = document.getElementById('webp').checked ? 'webp' : 'png';
+                initialize(apiData, optionKind);
+            }
+
+            /** Handle arrow keys for navigation between next \ prev frames */
+            document.onkeydown = function (e) {
+                e = e || window.event;
+                switch (e.which || e.keyCode) {
+                    case 37: // left
+                        stop();
+                        showFrame(animationPosition - 1, true);
+                        break;
+                    case 39: // right
+                        stop();
+                        showFrame(animationPosition + 1, true);
+                        break;
+                    default:
+                        return; // exit this handler for other keys
+                }
+                e.preventDefault();
+                return false;
+            } 
+
+
+
+		
+		const icon_depart = L.icon({
+                iconUrl: "Point avion.svg", // Make sure it is in the same directory as index.html
+                iconSize: [32, 32], // Adjust size as needed
+                iconAnchor: [16, 32], // The point of the icon which will correspond to marker's location
+                popupAnchor: [0, -32], // Point from which the popup should open relative to the iconAnchor
+        });
+        const icon_arriver = L.icon({
+                iconUrl: "Point avion à vendre.svg", // Make sure it is in the same directory as index.html
+                iconSize: [32, 32], // Adjust size as needed
+                iconAnchor: [16, 32], // The point of the icon which will correspond to marker's location
+                popupAnchor: [0, -32], // Point from which the popup should open relative to the iconAnchor
+        });
+		const layer_vol_passager = L.layerGroup([]);
+		const layer_vol_cargo = L.layerGroup([]);
+		
+		let temps_mini_calcul = 0;
+		let temps_mini = 0;
+  		let temps_maxi_calcul = 18;
+		let temps_maxi = 18;
+  		var slider_range_flight_time = document.getElementById('slider_range_flight_time');
+		var range_flight_time = document.getElementById('range_flight_time');
+  		noUiSlider.create(slider_range_flight_time, {
+    		start: [1, 5],
+			step: 0.5,
+    		connect: true,
+    		range: { min: 0, max: 18 }
+  		});
+		
+		// initialiser l'affichage avec les valeurs de départ
+  		let initial = slider_range_flight_time.noUiSlider.get();
+ 		temps_mini = Number(initial[0]);
+  		temps_maxi = Number(initial[1]);
+ 		temps_mini_calcul = Number(initial[0]);
+  		temps_maxi_calcul = Number(initial[1]);
+  		range_flight_time.value = temps_mini + "h - " + temps_maxi + "h";
+  		// mise à jour en temps réel (update = à chaque mouvement)
+  		slider_range_flight_time.noUiSlider.on('update', function(values) {
+    		temps_mini = Number(values[0]);
+    		temps_maxi = Number(values[1]);
+			temps_mini_calcul = Number(values[0]);
+  			temps_maxi_calcul = Number(values[1]);
+			if (temps_mini == temps_maxi) {
+				temps_mini_calcul = temps_mini - 0.25;
+    			temps_maxi_calcul = temps_maxi + 0.25;
+			}
+    		range_flight_time.value = temps_mini + "h - " + temps_maxi + "h";
+		});
+
+		let boutton_vol_passager_actif = 0;
+		let boutton_vol_cargo_actif = 0;
+		let vol_passager_random;
+		let vol_cargo_random;
+		
+		document.querySelectorAll('#boutton_cherchez_un_vol').forEach(button => {
+        	button.addEventListener('click', function() {
+				console.log("temps_mini :" + temps_mini_calcul + "h - temps_maxi :" + temps_maxi_calcul + "h, recherche de vol en cours");
+				document.getElementById("loading").style.display = "block";
+				
+				document.getElementById("boutton_vol_passager").style.display = "none";
+				boutton_vol_passager.classList.remove("active")
+				boutton_vol_passager_actif = 0;
+				
+        		document.getElementById("boutton_vol_cargo").style.display = "none";
+				boutton_vol_cargo.classList.remove("active")
+				boutton_vol_cargo_actif = 0;
+				
+        		document.getElementById("boutton_generer_simbrief_passager").style.display = "none";
+				document.getElementById("boutton_generer_simbrief_cargo").style.display = "none";
+
+				layer_vol_passager.clearLayers();
+				map.removeLayer(layer_vol_passager);
+				layer_vol_cargo.clearLayers();
+				map.removeLayer(layer_vol_cargo);
+				
+				const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRk5HwoX9-ZlzVnEdobeUU795qpeZk2cP7BLfw9hOQVBV8WSJmsE4wV9oja_ey7vwetOvif9FB7o2cw/pub?gid=1325407337&single=true&output=csv";
+            	fetch(sheetURL)
+                	.then((response) => response.text())
+                	.then((csvText) => {
+                    	const rows = csvText.split("\n");
+                    	const rows_length = rows.length;
+                    	const headers = rows[0].split(","); // Première ligne = légende
+						let liste_vols_passager = {};
+						let liste_vols_cargo = {};
+						let x_passager = 0;
+						let x_cargo = 0;
+						let row_temp;
+                    	for (let y =  0; y < rows.length; y++) {
+                        	row_temp = rows[y].split(",").map(value => value.replace(/\r$/, '').trim());
+							if (  temps_mini_calcul < row_temp[8] & row_temp[8] < temps_maxi_calcul ) {
+								if ( row_temp[6] == "passager") {
+									liste_vols_passager[x_passager] = row_temp;
+									x_passager++;
+								} else if (row_temp[6] == "cargo") {
+									liste_vols_cargo[x_cargo] = row_temp;
+									x_cargo++;
+								}
+							}
+                    	}
+
+						document.getElementById("loading").style.display = "none";
+						
+						if (x_passager > 0) {
+							let x_passager_random = Math.floor(Math.random() * (x_passager));
+							vol_passager_random = liste_vols_passager[x_passager_random];
+							//console.log(x_passager_random);
+							console.log(vol_passager_random);
+							const boutton_vol_passager = document.getElementById("boutton_vol_passager");
+							boutton_vol_passager.innerHTML =
+    							`<br><strong>vol passager</strong><br>` +
+    							`${vol_passager_random[9]} : ${vol_passager_random[0]} → ${vol_passager_random[3]}<br>` +
+    							`${vol_passager_random[7]} nm, ${parseFloat(vol_passager_random[8]).toFixed(2)} h<br>` +
+    							`<small>${vol_passager_random[10]}</small><br>` +
+								`<small>${vol_passager_random[11]}</small><br>`;
+							document.getElementById("boutton_vol_passager").style.display = "block";
+							
+							const PopupContent_depart = 
+								`<b>${vol_passager_random[0]}</b><br>` +
+								`${vol_passager_random[14]}<br>` +
+								`longueur de piste : ${vol_passager_random[12]} ft<br>` +
+								`altitude : ${parseFloat(vol_passager_random[13]).toFixed(0)} ft<br>` +
+								`<a href="https://metar-taf.com/fr/metar/${vol_passager_random[0]}" target="_blank">metar</a> - <a href="https://fsimnet.com/vam/index.php?page=airport_info&airport=${vol_passager_random[0]}" target="_blank">plus d'infos</a>`;
+							const PopupContent_arriver =
+								`<b>${vol_passager_random[3]}</b><br>` +
+								`${vol_passager_random[17]}<br>` +
+								`longueur de piste : ${vol_passager_random[15]} ft<br>` +
+								`altitude : ${parseFloat(vol_passager_random[16]).toFixed(0)} ft<br>` +
+								`<a href="https://metar-taf.com/fr/metar/${vol_passager_random[3]}" target="_blank">metar</a> - <a href="https://fsimnet.com/vam/index.php?page=airport_info&airport=${vol_passager_random[3]}" target="_blank">plus d'infos</a>`;
+							const marker_passager_depart = L.marker([vol_passager_random[1], vol_passager_random[2]], {icon: icon_depart,}).bindPopup(PopupContent_depart);
+							const marker_passager_arriver = L.marker([vol_passager_random[4], vol_passager_random[5]], {icon: icon_arriver,}).bindPopup(PopupContent_arriver);
+                            layer_vol_passager.addLayer(marker_passager_depart);
+							layer_vol_passager.addLayer(marker_passager_arriver);
+							const polyline_passager = L.polyline([[vol_passager_random[1], vol_passager_random[2]], [vol_passager_random[4], vol_passager_random[5]]], {color: "green"});
+							layer_vol_passager.addLayer(polyline_passager);
+						} else {
+                    		console.log("Aucun vol passager disponible.");
+                		}
+						
+						if (x_cargo > 0) {
+							let x_cargo_random = Math.floor(Math.random() * (x_cargo));
+							vol_cargo_random = liste_vols_cargo[x_cargo_random];
+							//console.log(x_cargo_random);
+							console.log(vol_cargo_random);
+							const boutton_vol_cargo = document.getElementById("boutton_vol_cargo");
+							boutton_vol_cargo.innerHTML =
+    							`<br><strong>vol cargo</strong><br>` +
+    							`${vol_cargo_random[9]} : ${vol_cargo_random[0]} → ${vol_cargo_random[3]}<br>` +
+    							`${vol_cargo_random[7]} nm, ${parseFloat(vol_cargo_random[8]).toFixed(2)} h<br>` +
+    							`<small>${vol_cargo_random[10]}</small><br>` +
+								`<small>${vol_cargo_random[11]}</small><br>`;
+							document.getElementById("boutton_vol_cargo").style.display = "block";
+
+							const PopupContent_depart = 
+								`<b>${vol_cargo_random[0]}</b><br>` +
+								`${vol_cargo_random[14]}<br>` +
+								`longueur de piste : ${vol_cargo_random[12]} ft<br>` +
+								`altitude : ${parseFloat(vol_cargo_random[13]).toFixed(0)} ft<br>` +
+								`<a href="https://metar-taf.com/fr/metar/${vol_cargo_random[0]}" target="_blank">metar</a> - <a href="https://fsimnet.com/vam/index.php?page=airport_info&airport=${vol_cargo_random[0]}" target="_blank">plus d'infos</a>`;
+							const PopupContent_arriver =
+								`<b>${vol_cargo_random[3]}</b><br>` +
+								`${vol_cargo_random[17]}<br>` +
+								`longueur de piste : ${vol_cargo_random[15]} ft<br>` +
+								`altitude : ${parseFloat(vol_cargo_random[16]).toFixed(0)} ft<br>` +
+								`<a href="https://metar-taf.com/fr/metar/${vol_cargo_random[3]}" target="_blank">metar</a> - <a href="https://fsimnet.com/vam/index.php?page=airport_info&airport=${vol_cargo_random[3]}" target="_blank">plus d'infos</a>`;
+							const marker_cargo_depart = L.marker([vol_cargo_random[1], vol_cargo_random[2]], {icon: icon_depart,}).bindPopup(PopupContent_depart);
+							const marker_cargo_arriver = L.marker([vol_cargo_random[4], vol_cargo_random[5]], {icon: icon_arriver,}).bindPopup(PopupContent_arriver);
+                            layer_vol_cargo.addLayer(marker_cargo_depart);
+							layer_vol_cargo.addLayer(marker_cargo_arriver);
+							const polyline_cargo = L.polyline([[vol_cargo_random[1], vol_cargo_random[2]], [vol_cargo_random[4], vol_cargo_random[5]]], {color: "green"});
+							layer_vol_cargo.addLayer(polyline_cargo);
+						} else {
+                    		console.log("Aucun vol cargo disponible.");
+                		}
+
+						boutton_vol_passager.onclick = function () {
+							if (boutton_vol_passager_actif == 0){
+								boutton_vol_passager_actif = 1;
+								boutton_vol_passager.classList.add("active");
+								map.addLayer(layer_vol_passager);
+								document.getElementById("boutton_generer_simbrief_passager").style.display = "block";
+								if (boutton_vol_cargo_actif == 1){
+									boutton_vol_cargo_actif = 0;
+									boutton_vol_cargo.classList.remove("active");
+									map.removeLayer(layer_vol_cargo);
+									document.getElementById("boutton_generer_simbrief_cargo").style.display = "none";
+								}
+							} else if (boutton_vol_passager_actif == 1){
+								boutton_vol_passager_actif = 0;
+								boutton_vol_passager.classList.remove("active");
+								map.removeLayer(layer_vol_passager);
+								document.getElementById("boutton_generer_simbrief_passager").style.display = "none";
+							}
+						}
+
+						boutton_vol_cargo.onclick = function () {
+							if (boutton_vol_cargo_actif == 0){
+								boutton_vol_cargo_actif = 1;
+								boutton_vol_cargo.classList.add("active");
+								map.addLayer(layer_vol_cargo);
+								document.getElementById("boutton_generer_simbrief_cargo").style.display = "block";
+								if (boutton_vol_passager_actif == 1){
+									boutton_vol_passager_actif = 0;
+									boutton_vol_passager.classList.remove("active");
+									map.removeLayer(layer_vol_passager);
+									document.getElementById("boutton_generer_simbrief_passager").style.display = "none";
+								}
+							} else if (boutton_vol_cargo_actif == 1){
+								boutton_vol_cargo_actif = 0;
+								boutton_vol_cargo.classList.remove("active");
+								map.removeLayer(layer_vol_cargo);
+								document.getElementById("boutton_generer_simbrief_cargo").style.display = "none";
+							}
+						}
+                	});
+			});
+		});
+		
+		document.getElementById('boutton_generer_simbrief_passager').addEventListener('click', () => {
+    		const departure = vol_passager_random[0];
+    		const arrival = vol_passager_random[3];
+    		const callsign = vol_passager_random[9];
+			const airlinePrefix = callsign.substring(0, 3);
+			const flightNumber = callsign.substring(3);
+       		const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airlinePrefix}&fltnum=${flightNumber}&orig=${departure}&dest=${arrival}`;
+        	console.log("URL générée passager : ", simBriefURL);
+       		window.open(simBriefURL, '_blank');
+		});
+		document.getElementById('boutton_generer_simbrief_cargo').addEventListener('click', () => {
+    		const departure = vol_cargo_random[0];
+    		const arrival = vol_cargo_random[3];
+    		const callsign = vol_cargo_random[9];
+			const airlinePrefix = callsign.substring(0, 3);
+			const flightNumber = callsign.substring(3);
+       		const simBriefURL = `https://dispatch.simbrief.com/options/custom?airline=${airlinePrefix}&fltnum=${flightNumber}&orig=${departure}&dest=${arrival}`;
+        	console.log("URL générée cargo : ", simBriefURL);
+       		window.open(simBriefURL, '_blank');
+		});
+    </script>
+    
+    </body>
+</html>
